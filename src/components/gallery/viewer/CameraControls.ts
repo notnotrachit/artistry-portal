@@ -50,18 +50,28 @@ export class CameraControls {
 
   private handleCameraMovement() {
     const moveVector = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    this.camera.getWorldDirection(direction);
+    
+    // Calculate forward and right vectors based on camera orientation
+    const forward = direction.clone();
+    forward.y = 0; // Keep movement in horizontal plane
+    forward.normalize();
+    
+    const right = new THREE.Vector3();
+    right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
     
     if (this.keyStates['ArrowUp'] || this.keyStates['w']) {
-      moveVector.z -= this.moveSpeed;
+      moveVector.add(forward.multiplyScalar(this.moveSpeed));
     }
     if (this.keyStates['ArrowDown'] || this.keyStates['s']) {
-      moveVector.z += this.moveSpeed;
+      moveVector.add(forward.multiplyScalar(-this.moveSpeed));
     }
     if (this.keyStates['ArrowLeft'] || this.keyStates['a']) {
-      moveVector.x -= this.moveSpeed;
+      moveVector.add(right.multiplyScalar(-this.moveSpeed));
     }
     if (this.keyStates['ArrowRight'] || this.keyStates['d']) {
-      moveVector.x += this.moveSpeed;
+      moveVector.add(right.multiplyScalar(this.moveSpeed));
     }
 
     // Apply movement with bounds checking
@@ -83,20 +93,27 @@ export class CameraControls {
   }
 
   private handleCameraRotation() {
-    if (this.keyStates['q']) {
-      this.rotateCameraAroundCenter(this.rotationSpeed);
+    if (this.keyStates['q'] || this.keyStates['e']) {
+      const rotationAngle = (this.keyStates['q'] ? 1 : -1) * this.rotationSpeed;
+      
+      // Create rotation matrix around Y axis
+      const rotationMatrix = new THREE.Matrix4();
+      rotationMatrix.makeRotationY(rotationAngle);
+      
+      // Get current camera direction
+      const direction = new THREE.Vector3();
+      this.camera.getWorldDirection(direction);
+      
+      // Apply rotation to direction vector
+      direction.applyMatrix4(rotationMatrix);
+      
+      // Calculate new look-at point based on current position and rotated direction
+      const lookAtPoint = new THREE.Vector3();
+      lookAtPoint.addVectors(this.camera.position, direction);
+      
+      // Update camera to look at the new point
+      this.camera.lookAt(lookAtPoint);
     }
-    if (this.keyStates['e']) {
-      this.rotateCameraAroundCenter(-this.rotationSpeed);
-    }
-  }
-
-  private rotateCameraAroundCenter(angle: number) {
-    const x = this.camera.position.x;
-    const z = this.camera.position.z;
-    this.camera.position.x = Math.cos(angle) * x - Math.sin(angle) * z;
-    this.camera.position.z = Math.sin(angle) * x + Math.cos(angle) * z;
-    this.camera.lookAt(0, 0, 0);
   }
 
   public cleanup() {
