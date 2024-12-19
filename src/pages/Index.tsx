@@ -119,12 +119,27 @@ const Index = () => {
       if (error) throw error;
 
       // Transform the data to match GalleryViewer3D's expected format
-      return data.map(artwork => ({
-        id: artwork.id,
-        title: artwork.title,
-        image_url: artwork.image_url,
-        position: artwork.position as Position || null
-      }));
+      return data.map(artwork => {
+        // Safely parse the position data
+        let position: Position | null = null;
+        if (artwork.position && typeof artwork.position === 'object') {
+          const pos = artwork.position as Record<string, number>;
+          if ('x' in pos && 'y' in pos && 'z' in pos) {
+            position = {
+              x: Number(pos.x),
+              y: Number(pos.y),
+              z: Number(pos.z)
+            };
+          }
+        }
+
+        return {
+          id: artwork.id,
+          title: artwork.title,
+          image_url: artwork.image_url,
+          position
+        };
+      });
     },
   });
 
