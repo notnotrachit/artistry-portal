@@ -4,6 +4,7 @@ import { type ToastActionElement, type ToastProps } from '@/components/ui/toast'
 export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
+  private readonly DEG_TO_RAD = Math.PI / 180;
 
   constructor(private scene: THREE.Scene, private toast: (props: ToastProps) => void) {
     this.textureLoader = new THREE.TextureLoader();
@@ -39,13 +40,12 @@ export class ArtworkManager {
           );
         }
 
-        // Set rotation if available, converting to radians
+        // Set rotation if available, converting from degrees to radians
         if (artwork.rotation) {
-          const DEG_TO_RAD = Math.PI / 180;
           mesh.rotation.set(
-            Number(artwork.rotation.x) * DEG_TO_RAD,
-            Number(artwork.rotation.y) * DEG_TO_RAD,
-            Number(artwork.rotation.z) * DEG_TO_RAD
+            Number(artwork.rotation.x) * this.DEG_TO_RAD,
+            Number(artwork.rotation.y) * this.DEG_TO_RAD,
+            Number(artwork.rotation.z) * this.DEG_TO_RAD
           );
         }
 

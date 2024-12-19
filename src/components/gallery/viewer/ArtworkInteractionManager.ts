@@ -10,6 +10,7 @@ export class ArtworkInteractionManager {
   private raycaster = new THREE.Raycaster();
   private editMode = false;
   private onUpdateArtwork: (id: string, position: { x: number; y: number; z: number }, rotation: { x: number; y: number; z: number }) => void;
+  private readonly RAD_TO_DEG = 180 / Math.PI;
 
   constructor(
     scene: THREE.Scene,
@@ -39,6 +40,8 @@ export class ArtworkInteractionManager {
     if (this.selectedArtwork) {
       const position = this.selectedArtwork.position;
       const rotation = this.selectedArtwork.rotation;
+      
+      // Convert rotation from radians to degrees before saving
       this.onUpdateArtwork(
         this.selectedArtwork.userData.id,
         { 
@@ -47,9 +50,9 @@ export class ArtworkInteractionManager {
           z: Number(position.z.toFixed(3)) 
         },
         { 
-          x: Number(rotation.x.toFixed(3)), 
-          y: Number(rotation.y.toFixed(3)), 
-          z: Number(rotation.z.toFixed(3)) 
+          x: Number((rotation.x * this.RAD_TO_DEG).toFixed(3)), 
+          y: Number((rotation.y * this.RAD_TO_DEG).toFixed(3)), 
+          z: Number((rotation.z * this.RAD_TO_DEG).toFixed(3)) 
         }
       );
     }
