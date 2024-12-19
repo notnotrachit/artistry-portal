@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import GalleryViewer3D from "@/components/GalleryViewer3D";
 
 const CreateGalleryDialog = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState("");
@@ -81,16 +82,32 @@ const CreateGalleryDialog = ({ onClose }: { onClose: () => void }) => {
 
 const Index = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [selectedGallery, setSelectedGallery] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const { data: galleries, isLoading } = useQuery({
+  const { data: galleries, isLoading: galleriesLoading } = useQuery({
     queryKey: ["galleries"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("galleries")
         .select("*")
         .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: artworks, isLoading: artworksLoading } = useQuery({
+    queryKey: ["artworks", selectedGallery],
+    enabled: !!selectedGallery,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("artworks")
+        .select("*")
+        .eq("gallery_id", selectedGallery)
+        .order("created_at", { ascending: true });
 
       if (error) throw error;
       return data;
@@ -105,6 +122,8 @@ const Index = () => {
       navigate("/login");
     }
   };
+
+  const isLoading = galleriesLoading || (selectedGallery && artworksLoading);
 
   return (
     <div className="min-h-screen bg-gallery-50">
@@ -142,28 +161,49 @@ const Index = () => {
           </DialogContent>
         </Dialog>
 
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="h-64 bg-white rounded-lg shadow-md animate-pulse"
-              />
-            ))}
+        {selectedGallery && artworks && (
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-medium text-gallery-900">
+                {galleries?.find(g => g.id === selectedGallery)?.title}
+              </h2>
+              <Button variant="outline" onClick={() => setSelectedGallery(null)}>
+                Back to Galleries
+              </Button>
+            </div>
+            <GalleryViewer3D artworks={artworks} />
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {galleries?.map((gallery) => (
-              <GalleryCard
-                key={gallery.id}
-                title={gallery.title}
-                description={gallery.description || ""}
-                imageUrl="/placeholder.svg"
-                artworkCount={0}
-                template={gallery.template}
-              />
-            ))}
-          </div>
+        )}
+
+        {!selectedGallery && (
+          isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-64 bg-white rounded-lg shadow-md animate-pulse"
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {galleries?.map((gallery) => (
+                <div
+                  key={gallery.id}
+                  onClick={() => setSelectedGallery(gallery.id)}
+                  className="cursor-pointer"
+                >
+                  <GalleryCard
+                    title={gallery.title}
+                    description={gallery.description || ""}
+                    imageUrl="/placeholder.svg"
+                    artworkCount={0}
+                    template={gallery.template}
+                  />
+                </div>
+              ))}
+            </div>
+          )
         )}
       </div>
     </div>
