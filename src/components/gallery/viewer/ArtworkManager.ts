@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { type ToastProps } from '@/components/ui/use-toast';
+import { type Toast } from '@/components/ui/toast';
 
 export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
 
-  constructor(private scene: THREE.Scene, private toast: (props: ToastProps) => void) {
+  constructor(private scene: THREE.Scene, private toast: (props: Toast) => void) {
     this.textureLoader = new THREE.TextureLoader();
   }
 
