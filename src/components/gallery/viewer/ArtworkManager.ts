@@ -39,14 +39,14 @@ export class ArtworkManager {
           );
         }
 
-        // Set rotation if available
+        // Set rotation if available, converting to radians
         if (artwork.rotation) {
-          // Ensure rotation values are numbers and convert to radians if needed
-          const rotationX = Number(artwork.rotation.x) || 0;
-          const rotationY = Number(artwork.rotation.y) || 0;
-          const rotationZ = Number(artwork.rotation.z) || 0;
-          
-          mesh.rotation.set(rotationX, rotationY, rotationZ);
+          const DEG_TO_RAD = Math.PI / 180;
+          mesh.rotation.set(
+            Number(artwork.rotation.x) * DEG_TO_RAD,
+            Number(artwork.rotation.y) * DEG_TO_RAD,
+            Number(artwork.rotation.z) * DEG_TO_RAD
+          );
         }
 
         mesh.userData.id = artwork.id;
