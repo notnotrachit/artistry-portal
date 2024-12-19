@@ -13,9 +13,10 @@ export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
   private toast: ReturnType<typeof useToast>['toast'];
-  private spacing = 2.5; // Space between artworks
+  private gridSize = { x: 2.5, y: 2.5 }; // Space between artworks
   private maxArtworksPerRow = 5;
   private startPosition = { x: -5, y: 2, z: -1.9 };
+  private occupiedPositions: Set<string> = new Set();
 
   constructor(scene: THREE.Scene, toast: ReturnType<typeof useToast>['toast']) {
     this.scene = scene;
@@ -23,15 +24,30 @@ export class ArtworkManager {
     this.toast = toast;
   }
 
-  private calculatePosition(index: number) {
-    const row = Math.floor(index / this.maxArtworksPerRow);
-    const col = index % this.maxArtworksPerRow;
-    
-    return {
-      x: this.startPosition.x + (col * this.spacing),
-      y: this.startPosition.y - (row * this.spacing),
-      z: this.startPosition.z
-    };
+  private getNextAvailablePosition(): { x: number; y: number; z: number } {
+    let row = 0;
+    let col = 0;
+    let position;
+
+    do {
+      position = {
+        x: this.startPosition.x + (col * this.gridSize.x),
+        y: this.startPosition.y - (row * this.gridSize.y),
+        z: this.startPosition.z
+      };
+      const posKey = `${position.x},${position.y}`;
+
+      if (!this.occupiedPositions.has(posKey)) {
+        this.occupiedPositions.add(posKey);
+        return position;
+      }
+
+      col++;
+      if (col >= this.maxArtworksPerRow) {
+        col = 0;
+        row++;
+      }
+    } while (true);
   }
 
   public loadArtwork(artwork: Artwork) {
@@ -52,9 +68,7 @@ export class ArtworkManager {
           material
         );
         
-        // Use saved position or calculate new position based on index
-        const position = artwork.position || 
-          this.calculatePosition(this.artworks.size);
+        const position = artwork.position || this.getNextAvailablePosition();
         
         artworkMesh.position.set(position.x, position.y, position.z);
         artworkMesh.castShadow = true;
@@ -62,6 +76,11 @@ export class ArtworkManager {
         
         this.scene.add(artworkMesh);
         this.artworks.set(artwork.id, artworkMesh);
+
+        if (artwork.position) {
+          const posKey = `${position.x},${position.y}`;
+          this.occupiedPositions.add(posKey);
+        }
       },
       undefined,
       (error) => {
@@ -82,6 +101,8 @@ export class ArtworkManager {
   public removeArtwork(id: string) {
     const artwork = this.artworks.get(id);
     if (artwork) {
+      const posKey = `${artwork.position.x},${artwork.position.y}`;
+      this.occupiedPositions.delete(posKey);
       this.scene.remove(artwork);
       this.artworks.delete(id);
     }
@@ -92,5 +113,6 @@ export class ArtworkManager {
       this.scene.remove(artwork);
     });
     this.artworks.clear();
+    this.occupiedPositions.clear();
   }
 }

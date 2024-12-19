@@ -3,8 +3,9 @@ import * as THREE from 'three';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { createScene, createWalls } from './gallery/viewer/Scene';
-import { GalleryControls } from './gallery/viewer/Controls';
+import { CameraControls } from './gallery/viewer/CameraControls';
 import { ArtworkManager } from './gallery/viewer/ArtworkManager';
+import { ArtworkInteractionManager } from './gallery/viewer/ArtworkInteractionManager';
 import { supabase } from '@/integrations/supabase/client';
 
 interface GalleryViewer3DProps {
@@ -21,8 +22,9 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const [editMode, setEditMode] = useState(false);
-  const controlsRef = useRef<GalleryControls | null>(null);
+  const cameraControlsRef = useRef<CameraControls | null>(null);
   const artworkManagerRef = useRef<ArtworkManager | null>(null);
+  const artworkInteractionRef = useRef<ArtworkInteractionManager | null>(null);
   const animationFrameRef = useRef<number>();
 
   useEffect(() => {
@@ -48,9 +50,16 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
     containerRef.current.appendChild(renderer.domElement);
 
     // Controls setup
-    controlsRef.current = new GalleryControls(
-      camera, 
-      containerRef.current,
+    cameraControlsRef.current = new CameraControls(camera);
+
+    // Artwork manager setup
+    artworkManagerRef.current = new ArtworkManager(scene, toast);
+    artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork));
+
+    // Artwork interaction setup
+    artworkInteractionRef.current = new ArtworkInteractionManager(
+      scene,
+      camera,
       editMode,
       async (id, position) => {
         try {
@@ -71,44 +80,19 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       }
     );
 
-    // Artwork manager setup
-    artworkManagerRef.current = new ArtworkManager(scene, toast);
-    artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork));
-
-    // Add raycaster for artwork selection in edit mode
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
-
+    // Event listeners
     const handleClick = (event: MouseEvent) => {
-      if (!editMode) return;
-
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
-
-      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
-      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
-
-      raycaster.setFromCamera(mouse, camera);
-      const intersects = raycaster.intersectObjects(scene.children);
-
-      // Find the first intersected artwork
-      const hitArtwork = intersects.find(intersect => 
-        intersect.object instanceof THREE.Mesh && 
-        intersect.object.userData.id
-      );
-
-      if (hitArtwork) {
-        controlsRef.current?.setSelectedArtwork(hitArtwork.object as THREE.Mesh);
-      } else {
-        controlsRef.current?.setSelectedArtwork(null);
-      }
+      artworkInteractionRef.current?.handleClick(event, containerRef.current!);
     };
 
     containerRef.current.addEventListener('click', handleClick);
+    containerRef.current.addEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);
+    window.addEventListener('mousemove', artworkInteractionRef.current.handleMouseMove);
+    window.addEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
 
     // Animation loop
     const animate = () => {
-      controlsRef.current?.update();
+      cameraControlsRef.current?.update();
       renderer.render(scene, camera);
       animationFrameRef.current = requestAnimationFrame(animate);
     };
@@ -132,17 +116,21 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      controlsRef.current?.cleanup();
+      cameraControlsRef.current?.cleanup();
       artworkManagerRef.current?.cleanup();
-      window.removeEventListener('resize', handleResize);
+      artworkInteractionRef.current?.cleanup();
       containerRef.current?.removeEventListener('click', handleClick);
+      containerRef.current?.removeEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);
+      window.removeEventListener('mousemove', artworkInteractionRef.current.handleMouseMove);
+      window.removeEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
+      window.removeEventListener('resize', handleResize);
       renderer.dispose();
     };
   }, [artworks, editMode, toast]);
 
-  // Update controls edit mode when it changes
+  // Update interaction manager edit mode when it changes
   useEffect(() => {
-    controlsRef.current?.setEditMode(editMode);
+    artworkInteractionRef.current?.setEditMode(editMode);
   }, [editMode]);
 
   return (
