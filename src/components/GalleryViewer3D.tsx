@@ -33,7 +33,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
 
     // Scene setup
     const scene = createScene();
-    createWalls(scene);
+    const { bounds } = createWalls(scene);
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
@@ -51,7 +51,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
     containerRef.current.appendChild(renderer.domElement);
 
     // Controls setup
-    cameraControlsRef.current = new CameraControls(camera);
+    cameraControlsRef.current = new CameraControls(camera, bounds);
 
     // Artwork manager setup
     artworkManagerRef.current = new ArtworkManager(scene, toast);
@@ -155,6 +155,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
           {editMode && (
             <p className="text-sm text-muted-foreground">
               Click to select an artwork. Drag to move, hold Shift + drag to rotate.
+              Use WASD or arrow keys to move, Q/E to rotate the camera.
             </p>
           )}
         </div>
