@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { type ToastProps } from '@/components/ui/toast';
+import { type ToastProps } from '@/components/ui/use-toast';
 
 export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
@@ -41,11 +41,12 @@ export class ArtworkManager {
 
         // Set rotation if available
         if (artwork.rotation) {
-          mesh.rotation.set(
-            artwork.rotation.x,
-            artwork.rotation.y,
-            artwork.rotation.z
-          );
+          // Ensure rotation values are numbers and convert to radians if needed
+          const rotationX = Number(artwork.rotation.x) || 0;
+          const rotationY = Number(artwork.rotation.y) || 0;
+          const rotationZ = Number(artwork.rotation.z) || 0;
+          
+          mesh.rotation.set(rotationX, rotationY, rotationZ);
         }
 
         mesh.userData.id = artwork.id;
