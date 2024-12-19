@@ -5,8 +5,6 @@ interface Bounds {
   maxX: number;
   minZ: number;
   maxZ: number;
-  minY: number;
-  maxY: number;
 }
 
 export class CameraControls {
@@ -17,6 +15,10 @@ export class CameraControls {
   private bounds: Bounds;
   private verticalAngle = 0;
   private readonly maxVerticalAngle = Math.PI / 3; // 60 degrees up/down
+  private isRightMouseDown = false;
+  private lastMouseX = 0;
+  private lastMouseY = 0;
+  private mouseSensitivity = 0.003;
 
   constructor(camera: THREE.PerspectiveCamera, bounds: Bounds) {
     this.camera = camera;
@@ -27,71 +29,96 @@ export class CameraControls {
   private setupEventListeners() {
     window.addEventListener('keydown', this.handleKeyDown);
     window.addEventListener('keyup', this.handleKeyUp);
+    window.addEventListener('mousedown', this.handleMouseDown);
+    window.addEventListener('mousemove', this.handleMouseMove);
+    window.addEventListener('mouseup', this.handleMouseUp);
+    window.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
   private handleKeyDown = (event: KeyboardEvent) => {
-    this.keyStates[event.key] = true;
+    this.keyStates[event.key.toLowerCase()] = true;
   };
 
   private handleKeyUp = (event: KeyboardEvent) => {
-    this.keyStates[event.key] = false;
+    this.keyStates[event.key.toLowerCase()] = false;
   };
 
-  private clampPosition(position: THREE.Vector3): THREE.Vector3 {
-    position.x = Math.max(this.bounds.minX, Math.min(this.bounds.maxX, position.x));
-    position.y = Math.max(this.bounds.minY, Math.min(this.bounds.maxY, position.y));
-    position.z = Math.max(this.bounds.minZ, Math.min(this.bounds.maxZ, position.z));
-    return position;
-  }
+  private handleMouseDown = (event: MouseEvent) => {
+    if (event.button === 2) { // Right mouse button
+      this.isRightMouseDown = true;
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    }
+  };
 
-  public update() {
-    this.handleCameraMovement();
-    this.handleCameraRotation();
-    this.camera.position.copy(this.clampPosition(this.camera.position));
-  }
+  private handleMouseMove = (event: MouseEvent) => {
+    if (this.isRightMouseDown) {
+      const deltaX = event.clientX - this.lastMouseX;
+      const deltaY = event.clientY - this.lastMouseY;
 
-  private handleCameraMovement() {
-    const moveVector = new THREE.Vector3();
+      // Horizontal rotation
+      const horizontalRotation = -deltaX * this.mouseSensitivity;
+      const direction = new THREE.Vector3();
+      this.camera.getWorldDirection(direction);
+      const horizontalAxis = new THREE.Vector3(0, 1, 0);
+      direction.applyAxisAngle(horizontalAxis, horizontalRotation);
+
+      // Vertical rotation
+      const verticalRotation = -deltaY * this.mouseSensitivity;
+      this.verticalAngle = Math.max(
+        -this.maxVerticalAngle,
+        Math.min(this.maxVerticalAngle, this.verticalAngle + verticalRotation)
+      );
+
+      // Apply rotations
+      direction.y = Math.sin(this.verticalAngle);
+      direction.normalize();
+
+      // Update camera look-at point
+      const lookAtPoint = new THREE.Vector3();
+      lookAtPoint.addVectors(this.camera.position, direction);
+      this.camera.lookAt(lookAtPoint);
+
+      this.lastMouseX = event.clientX;
+      this.lastMouseY = event.clientY;
+    }
+  };
+
+  private handleMouseUp = (event: MouseEvent) => {
+    if (event.button === 2) {
+      this.isRightMouseDown = false;
+    }
+  };
+
+  private handleMovement() {
+    const moveSpeed = this.moveSpeed;
     const direction = new THREE.Vector3();
     this.camera.getWorldDirection(direction);
-    
-    // Calculate forward and right vectors based on camera orientation
-    const forward = direction.clone();
-    forward.y = 0; // Keep movement in horizontal plane
-    forward.normalize();
-    
-    const right = new THREE.Vector3();
-    right.crossVectors(forward, new THREE.Vector3(0, 1, 0));
-    
-    if (this.keyStates['ArrowUp'] || this.keyStates['w']) {
-      moveVector.add(forward.multiplyScalar(this.moveSpeed));
+    direction.y = 0; // Keep movement horizontal
+    direction.normalize();
+
+    const sideDirection = new THREE.Vector3(-direction.z, 0, direction.x);
+
+    let newPosition = this.camera.position.clone();
+
+    if (this.keyStates['w'] || this.keyStates['arrowup']) {
+      newPosition.add(direction.multiplyScalar(moveSpeed));
     }
-    if (this.keyStates['ArrowDown'] || this.keyStates['s']) {
-      moveVector.add(forward.multiplyScalar(-this.moveSpeed));
+    if (this.keyStates['s'] || this.keyStates['arrowdown']) {
+      newPosition.sub(direction.multiplyScalar(moveSpeed));
     }
-    if (this.keyStates['ArrowLeft'] || this.keyStates['a']) {
-      moveVector.add(right.multiplyScalar(-this.moveSpeed));
+    if (this.keyStates['a'] || this.keyStates['arrowleft']) {
+      newPosition.add(sideDirection.multiplyScalar(moveSpeed));
     }
-    if (this.keyStates['ArrowRight'] || this.keyStates['d']) {
-      moveVector.add(right.multiplyScalar(this.moveSpeed));
+    if (this.keyStates['d'] || this.keyStates['arrowright']) {
+      newPosition.sub(sideDirection.multiplyScalar(moveSpeed));
     }
 
-    // Apply movement with bounds checking
-    const newPosition = this.camera.position.clone().add(moveVector);
-    if (this.isWithinBounds(newPosition)) {
-      this.camera.position.copy(newPosition);
-    }
-  }
+    // Apply bounds
+    newPosition.x = Math.max(this.bounds.minX, Math.min(this.bounds.maxX, newPosition.x));
+    newPosition.z = Math.max(this.bounds.minZ, Math.min(this.bounds.maxZ, newPosition.z));
 
-  private isWithinBounds(position: THREE.Vector3): boolean {
-    return (
-      position.x >= this.bounds.minX &&
-      position.x <= this.bounds.maxX &&
-      position.z >= this.bounds.minZ &&
-      position.z <= this.bounds.maxZ &&
-      position.y >= this.bounds.minY &&
-      position.y <= this.bounds.maxY
-    );
+    this.camera.position.copy(newPosition);
   }
 
   private handleCameraRotation() {
@@ -99,22 +126,22 @@ export class CameraControls {
     if (this.keyStates['q'] || this.keyStates['e']) {
       const rotationAngle = (this.keyStates['q'] ? 1 : -1) * this.rotationSpeed;
       
-      // Create rotation matrix around Y axis
-      const rotationMatrix = new THREE.Matrix4();
-      rotationMatrix.makeRotationY(rotationAngle);
-      
       // Get current camera direction
       const direction = new THREE.Vector3();
       this.camera.getWorldDirection(direction);
       
-      // Apply rotation to direction vector
+      // Rotate around Y axis
+      const rotationMatrix = new THREE.Matrix4();
+      rotationMatrix.makeRotationY(rotationAngle);
       direction.applyMatrix4(rotationMatrix);
       
-      // Calculate new look-at point based on current position and rotated direction
-      const lookAtPoint = new THREE.Vector3();
-      lookAtPoint.addVectors(this.camera.position, direction);
+      // Maintain vertical angle
+      direction.y = Math.sin(this.verticalAngle);
+      direction.normalize();
       
       // Update camera to look at the new point
+      const lookAtPoint = new THREE.Vector3();
+      lookAtPoint.addVectors(this.camera.position, direction);
       this.camera.lookAt(lookAtPoint);
     }
 
@@ -143,8 +170,16 @@ export class CameraControls {
     }
   }
 
+  public update() {
+    this.handleMovement();
+    this.handleCameraRotation();
+  }
+
   public cleanup() {
     window.removeEventListener('keydown', this.handleKeyDown);
     window.removeEventListener('keyup', this.handleKeyUp);
+    window.removeEventListener('mousedown', this.handleMouseDown);
+    window.removeEventListener('mousemove', this.handleMouseMove);
+    window.removeEventListener('mouseup', this.handleMouseUp);
   }
 }
