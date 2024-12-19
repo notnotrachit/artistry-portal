@@ -58,9 +58,9 @@ export class ArtworkManager {
       (error) => {
         console.error('Error loading artwork texture:', error);
         this.toast({
+          variant: "destructive",
           title: "Error",
-          description: "Failed to load artwork image",
-          variant: "destructive"
+          children: "Failed to load artwork image"
         });
       }
     );
