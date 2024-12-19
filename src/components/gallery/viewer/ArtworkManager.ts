@@ -6,6 +6,7 @@ interface Artwork {
   title: string;
   image_url: string;
   position: { x: number; y: number; z: number } | null;
+  rotation?: { x: number; y: number; z: number } | null;
 }
 
 export class ArtworkManager {
@@ -69,8 +70,17 @@ export class ArtworkManager {
         );
         
         const position = artwork.position || this.getNextAvailablePosition();
-        
         artworkMesh.position.set(position.x, position.y, position.z);
+        
+        // Apply rotation if it exists
+        if (artwork.rotation) {
+          artworkMesh.rotation.set(
+            artwork.rotation.x || 0,
+            artwork.rotation.y || 0,
+            artwork.rotation.z || 0
+          );
+        }
+        
         artworkMesh.castShadow = true;
         artworkMesh.userData.id = artwork.id;
         

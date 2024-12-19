@@ -14,6 +14,7 @@ interface GalleryViewer3DProps {
     title: string;
     image_url: string;
     position: { x: number; y: number; z: number } | null;
+    rotation?: { x: number; y: number; z: number } | null;
   }>;
   isOwner?: boolean;
 }
@@ -61,19 +62,22 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       scene,
       camera,
       editMode,
-      async (id, position) => {
+      async (id, position, rotation) => {
         try {
           const { error } = await supabase
             .from('artworks')
-            .update({ position })
+            .update({ 
+              position,
+              rotation
+            })
             .eq('id', id);
 
           if (error) throw error;
         } catch (error) {
-          console.error('Error updating artwork position:', error);
+          console.error('Error updating artwork:', error);
           toast({
             title: "Error",
-            description: "Failed to save artwork position",
+            description: "Failed to save artwork position and rotation",
             variant: "destructive"
           });
         }
@@ -136,12 +140,19 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
   return (
     <div className="space-y-4">
       {isOwner && (
-        <Button 
-          onClick={() => setEditMode(!editMode)}
-          variant={editMode ? "destructive" : "default"}
-        >
-          {editMode ? "Exit Edit Mode" : "Edit Artwork Positions"}
-        </Button>
+        <div className="space-y-2">
+          <Button 
+            onClick={() => setEditMode(!editMode)}
+            variant={editMode ? "destructive" : "default"}
+          >
+            {editMode ? "Exit Edit Mode" : "Edit Artwork Positions"}
+          </Button>
+          {editMode && (
+            <p className="text-sm text-muted-foreground">
+              Click to select an artwork. Drag to move, hold Shift + drag to rotate.
+            </p>
+          )}
+        </div>
       )}
       <div 
         ref={containerRef} 
