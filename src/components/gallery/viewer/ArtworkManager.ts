@@ -1,57 +1,21 @@
 import * as THREE from 'three';
-import { useToast } from '@/components/ui/use-toast';
-
-interface Artwork {
-  id: string;
-  title: string;
-  image_url: string;
-  position: { x: number; y: number; z: number } | null;
-  rotation?: { x: number; y: number; z: number } | null;
-}
+import { Toast } from '@/components/ui/use-toast';
 
 export class ArtworkManager {
-  private scene: THREE.Scene;
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
-  private toast: ReturnType<typeof useToast>['toast'];
-  private gridSize = { x: 2.5, y: 2.5 }; // Space between artworks
-  private maxArtworksPerRow = 5;
-  private startPosition = { x: -5, y: 2, z: -1.9 };
-  private occupiedPositions: Set<string> = new Set();
 
-  constructor(scene: THREE.Scene, toast: ReturnType<typeof useToast>['toast']) {
-    this.scene = scene;
+  constructor(private scene: THREE.Scene, private toast: Toast) {
     this.textureLoader = new THREE.TextureLoader();
-    this.toast = toast;
   }
 
-  private getNextAvailablePosition(): { x: number; y: number; z: number } {
-    let row = 0;
-    let col = 0;
-    let position;
-
-    do {
-      position = {
-        x: this.startPosition.x + (col * this.gridSize.x),
-        y: this.startPosition.y - (row * this.gridSize.y),
-        z: this.startPosition.z
-      };
-      const posKey = `${position.x},${position.y}`;
-
-      if (!this.occupiedPositions.has(posKey)) {
-        this.occupiedPositions.add(posKey);
-        return position;
-      }
-
-      col++;
-      if (col >= this.maxArtworksPerRow) {
-        col = 0;
-        row++;
-      }
-    } while (true);
-  }
-
-  public loadArtwork(artwork: Artwork) {
+  loadArtwork(artwork: {
+    id: string;
+    title: string;
+    image_url: string;
+    position: { x: number; y: number; z: number } | null;
+    rotation?: { x: number; y: number; z: number } | null;
+  }) {
     this.textureLoader.load(
       artwork.image_url,
       (texture) => {
@@ -59,70 +23,59 @@ export class ArtworkManager {
         const width = 2;
         const height = width / aspectRatio;
 
-        const material = new THREE.MeshStandardMaterial({
+        const geometry = new THREE.PlaneGeometry(width, height);
+        const material = new THREE.MeshBasicMaterial({
           map: texture,
-          side: THREE.DoubleSide
+          side: THREE.DoubleSide,
         });
+        const mesh = new THREE.Mesh(geometry, material);
 
-        const artworkMesh = new THREE.Mesh(
-          new THREE.PlaneGeometry(width, height),
-          material
-        );
-        
-        const position = artwork.position || this.getNextAvailablePosition();
-        artworkMesh.position.set(position.x, position.y, position.z);
-        
-        // Apply rotation if it exists
-        if (artwork.rotation) {
-          artworkMesh.rotation.set(
-            artwork.rotation.x || 0,
-            artwork.rotation.y || 0,
-            artwork.rotation.z || 0
+        // Set position if available
+        if (artwork.position) {
+          mesh.position.set(
+            artwork.position.x,
+            artwork.position.y,
+            artwork.position.z
           );
         }
-        
-        artworkMesh.castShadow = true;
-        artworkMesh.userData.id = artwork.id;
-        
-        this.scene.add(artworkMesh);
-        this.artworks.set(artwork.id, artworkMesh);
 
-        if (artwork.position) {
-          const posKey = `${position.x},${position.y}`;
-          this.occupiedPositions.add(posKey);
+        // Set rotation if available
+        if (artwork.rotation) {
+          mesh.rotation.set(
+            artwork.rotation.x,
+            artwork.rotation.y,
+            artwork.rotation.z
+          );
         }
+
+        mesh.userData.id = artwork.id;
+        mesh.userData.title = artwork.title;
+
+        this.scene.add(mesh);
+        this.artworks.set(artwork.id, mesh);
       },
       undefined,
       (error) => {
-        console.error('Error loading texture:', error);
+        console.error('Error loading artwork texture:', error);
         this.toast({
           title: "Error",
-          description: `Failed to load artwork: ${artwork.title}`,
+          description: "Failed to load artwork image",
           variant: "destructive"
         });
       }
     );
   }
 
-  public getArtwork(id: string): THREE.Mesh | undefined {
-    return this.artworks.get(id);
-  }
-
-  public removeArtwork(id: string) {
-    const artwork = this.artworks.get(id);
-    if (artwork) {
-      const posKey = `${artwork.position.x},${artwork.position.y}`;
-      this.occupiedPositions.delete(posKey);
-      this.scene.remove(artwork);
-      this.artworks.delete(id);
-    }
-  }
-
-  public cleanup() {
-    this.artworks.forEach((artwork) => {
-      this.scene.remove(artwork);
+  cleanup() {
+    this.artworks.forEach((mesh) => {
+      this.scene.remove(mesh);
+      mesh.geometry.dispose();
+      if (mesh.material instanceof THREE.Material) {
+        mesh.material.dispose();
+      } else if (Array.isArray(mesh.material)) {
+        mesh.material.forEach((material) => material.dispose());
+      }
     });
     this.artworks.clear();
-    this.occupiedPositions.clear();
   }
 }
