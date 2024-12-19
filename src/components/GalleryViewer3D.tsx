@@ -1,6 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 import { useToast } from '@/components/ui/use-toast';
+import { Button } from '@/components/ui/button';
+import { createScene, createWalls } from './gallery/viewer/Scene';
+import { GalleryControls } from './gallery/viewer/Controls';
+import { ArtworkManager } from './gallery/viewer/ArtworkManager';
+import { supabase } from '@/integrations/supabase/client';
 
 interface GalleryViewer3DProps {
   artworks: Array<{
@@ -9,18 +14,22 @@ interface GalleryViewer3DProps {
     image_url: string;
     position: { x: number; y: number; z: number } | null;
   }>;
+  isOwner?: boolean;
 }
 
-const GalleryViewer3D = ({ artworks }: GalleryViewer3DProps) => {
+const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
+  const [editMode, setEditMode] = useState(false);
+  const controlsRef = useRef<GalleryControls | null>(null);
+  const artworkManagerRef = useRef<ArtworkManager | null>(null);
 
   useEffect(() => {
     if (!containerRef.current) return;
 
     // Scene setup
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xf5f5f5);
+    const scene = createScene();
+    createWalls(scene);
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
@@ -34,130 +43,43 @@ const GalleryViewer3D = ({ artworks }: GalleryViewer3DProps) => {
     // Renderer setup
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.shadowMap.enabled = true;
     containerRef.current.appendChild(renderer.domElement);
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
+    // Controls setup
+    controlsRef.current = new GalleryControls(
+      camera, 
+      containerRef.current,
+      editMode,
+      async (id, position) => {
+        try {
+          const { error } = await supabase
+            .from('artworks')
+            .update({ position })
+            .eq('id', id);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
-    directionalLight.position.set(0, 1, 0);
-    scene.add(directionalLight);
-
-    // Create walls
-    const wallGeometry = new THREE.PlaneGeometry(10, 5);
-    const wallMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xffffff,
-      side: THREE.DoubleSide 
-    });
-
-    // Back wall
-    const backWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    backWall.position.z = -2;
-    scene.add(backWall);
-
-    // Side walls
-    const leftWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    leftWall.rotation.y = Math.PI / 2;
-    leftWall.position.x = -5;
-    scene.add(leftWall);
-
-    const rightWall = new THREE.Mesh(wallGeometry, wallMaterial);
-    rightWall.rotation.y = -Math.PI / 2;
-    rightWall.position.x = 5;
-    scene.add(rightWall);
-
-    // Floor
-    const floorGeometry = new THREE.PlaneGeometry(10, 10);
-    const floorMaterial = new THREE.MeshStandardMaterial({ 
-      color: 0xcccccc,
-      side: THREE.DoubleSide 
-    });
-    const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-    floor.rotation.x = Math.PI / 2;
-    floor.position.y = -2.5;
-    scene.add(floor);
-
-    // Load and display artworks
-    const textureLoader = new THREE.TextureLoader();
-    const artworkGeometry = new THREE.PlaneGeometry(2, 2);
-
-    artworks.forEach((artwork, index) => {
-      textureLoader.load(
-        artwork.image_url,
-        (texture) => {
-          const material = new THREE.MeshStandardMaterial({
-            map: texture,
-            side: THREE.DoubleSide
-          });
-          const artworkMesh = new THREE.Mesh(artworkGeometry, material);
-          
-          // Position artwork along the back wall
-          const position = artwork.position || {
-            x: (index - (artworks.length - 1) / 2) * 2.5,
-            y: 0,
-            z: -1.9 // Slightly in front of the back wall
-          };
-          
-          artworkMesh.position.set(position.x, position.y, position.z);
-          scene.add(artworkMesh);
-        },
-        undefined,
-        (error) => {
-          console.error('Error loading texture:', error);
+          if (error) throw error;
+        } catch (error) {
+          console.error('Error updating artwork position:', error);
           toast({
             title: "Error",
-            description: `Failed to load artwork: ${artwork.title}`,
+            description: "Failed to save artwork position",
             variant: "destructive"
           });
         }
-      );
-    });
+      }
+    );
+
+    // Artwork manager setup
+    artworkManagerRef.current = new ArtworkManager(scene, toast);
+    artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork));
 
     // Animation loop
-    let isDragging = false;
-    let previousMousePosition = { x: 0, y: 0 };
-
     const animate = () => {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     };
-
-    // Mouse controls
-    const handleMouseDown = (event: MouseEvent) => {
-      isDragging = true;
-      previousMousePosition = {
-        x: event.clientX,
-        y: event.clientY
-      };
-    };
-
-    const handleMouseMove = (event: MouseEvent) => {
-      if (!isDragging) return;
-
-      const deltaMove = {
-        x: event.clientX - previousMousePosition.x,
-        y: event.clientY - previousMousePosition.y
-      };
-
-      camera.position.x -= deltaMove.x * 0.01;
-      camera.position.y += deltaMove.y * 0.01;
-
-      previousMousePosition = {
-        x: event.clientX,
-        y: event.clientY
-      };
-    };
-
-    const handleMouseUp = () => {
-      isDragging = false;
-    };
-
-    // Zoom controls
-    const handleWheel = (event: WheelEvent) => {
-      camera.position.z += event.deltaY * 0.01;
-      camera.position.z = Math.max(2, Math.min(10, camera.position.z));
-    };
+    animate();
 
     // Window resize handler
     const handleResize = () => {
@@ -167,36 +89,36 @@ const GalleryViewer3D = ({ artworks }: GalleryViewer3DProps) => {
       camera.updateProjectionMatrix();
       renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     };
-
-    // Add event listeners
-    containerRef.current.addEventListener('mousedown', handleMouseDown);
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    containerRef.current.addEventListener('wheel', handleWheel);
     window.addEventListener('resize', handleResize);
-
-    // Start animation loop
-    animate();
 
     // Cleanup
     return () => {
-      if (containerRef.current) {
-        containerRef.current.removeEventListener('mousedown', handleMouseDown);
-        containerRef.current.removeEventListener('wheel', handleWheel);
+      if (containerRef.current?.contains(renderer.domElement)) {
+        containerRef.current.removeChild(renderer.domElement);
       }
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      controlsRef.current?.cleanup();
+      artworkManagerRef.current?.cleanup();
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
     };
-  }, [artworks]);
+  }, [artworks, editMode, toast]);
 
   return (
-    <div 
-      ref={containerRef} 
-      className="w-full h-[600px] rounded-lg overflow-hidden"
-      style={{ touchAction: 'none' }}
-    />
+    <div className="space-y-4">
+      {isOwner && (
+        <Button 
+          onClick={() => setEditMode(!editMode)}
+          variant={editMode ? "destructive" : "default"}
+        >
+          {editMode ? "Exit Edit Mode" : "Edit Artwork Positions"}
+        </Button>
+      )}
+      <div 
+        ref={containerRef} 
+        className="w-full h-[600px] rounded-lg overflow-hidden"
+        style={{ touchAction: 'none' }}
+      />
+    </div>
   );
 };
 
