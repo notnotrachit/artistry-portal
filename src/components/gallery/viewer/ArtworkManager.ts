@@ -61,7 +61,7 @@ export class ArtworkManager {
         this.toast({
           variant: "destructive",
           title: "Error",
-          description: "Failed to load artwork image"
+          children: "Failed to load artwork image"
         });
       }
     );
