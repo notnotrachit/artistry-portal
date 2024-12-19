@@ -12,6 +12,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import GalleryViewer3D from "@/components/GalleryViewer3D";
 
+// Type for the position data
+interface Position {
+  x: number;
+  y: number;
+  z: number;
+}
+
 const CreateGalleryDialog = ({ onClose }: { onClose: () => void }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -110,7 +117,14 @@ const Index = () => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data;
+
+      // Transform the data to match GalleryViewer3D's expected format
+      return data.map(artwork => ({
+        id: artwork.id,
+        title: artwork.title,
+        image_url: artwork.image_url,
+        position: artwork.position as Position || null
+      }));
     },
   });
 
