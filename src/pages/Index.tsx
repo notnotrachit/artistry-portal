@@ -28,7 +28,7 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("galleries")
-        .select("*")
+        .select("*, owner:owner_id")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -81,6 +81,7 @@ const Index = () => {
   };
 
   const isLoading = galleriesLoading || (selectedGallery && artworksLoading);
+  const selectedGalleryData = galleries?.find(g => g.id === selectedGallery);
 
   return (
     <div className="min-h-screen bg-gallery-50">
@@ -102,10 +103,11 @@ const Index = () => {
           </DialogContent>
         </Dialog>
 
-        {selectedGallery && artworks ? (
+        {selectedGallery && artworks && selectedGalleryData ? (
           <SelectedGalleryView
             galleryId={selectedGallery}
-            galleryTitle={galleries?.find(g => g.id === selectedGallery)?.title || ""}
+            galleryTitle={selectedGalleryData.title}
+            galleryOwnerId={selectedGalleryData.owner_id}
             artworks={artworks}
             onBack={() => setSelectedGallery(null)}
           />

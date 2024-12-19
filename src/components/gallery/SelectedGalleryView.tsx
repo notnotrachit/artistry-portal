@@ -4,7 +4,7 @@ import { PlusCircle } from "lucide-react";
 import GalleryViewer3D from "@/components/GalleryViewer3D";
 import { AddArtworkDialog } from "./AddArtworkDialog";
 import { useState } from "react";
-import { useAuth } from "@supabase/auth-helpers-react";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface Position {
   x: number;
@@ -35,8 +35,8 @@ export const SelectedGalleryView = ({
   onBack 
 }: SelectedGalleryViewProps) => {
   const [isAddArtworkOpen, setIsAddArtworkOpen] = useState(false);
-  const user = useAuth();
-  const isOwner = user?.id === galleryOwnerId;
+  const session = useSession();
+  const isOwner = session?.user?.id === galleryOwnerId;
 
   return (
     <div className="space-y-4">
