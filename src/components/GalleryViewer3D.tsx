@@ -75,6 +75,37 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
     artworkManagerRef.current = new ArtworkManager(scene, toast);
     artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork));
 
+    // Add raycaster for artwork selection in edit mode
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const handleClick = (event: MouseEvent) => {
+      if (!editMode) return;
+
+      const rect = containerRef.current?.getBoundingClientRect();
+      if (!rect) return;
+
+      mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+      const intersects = raycaster.intersectObjects(scene.children);
+
+      // Find the first intersected artwork
+      const hitArtwork = intersects.find(intersect => 
+        intersect.object instanceof THREE.Mesh && 
+        intersect.object.userData.id
+      );
+
+      if (hitArtwork) {
+        controlsRef.current?.setSelectedArtwork(hitArtwork.object as THREE.Mesh);
+      } else {
+        controlsRef.current?.setSelectedArtwork(null);
+      }
+    };
+
+    containerRef.current.addEventListener('click', handleClick);
+
     // Animation loop
     const animate = () => {
       controlsRef.current?.update();
@@ -104,9 +135,15 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       controlsRef.current?.cleanup();
       artworkManagerRef.current?.cleanup();
       window.removeEventListener('resize', handleResize);
+      containerRef.current?.removeEventListener('click', handleClick);
       renderer.dispose();
     };
   }, [artworks, editMode, toast]);
+
+  // Update controls edit mode when it changes
+  useEffect(() => {
+    controlsRef.current?.setEditMode(editMode);
+  }, [editMode]);
 
   return (
     <div className="space-y-4">

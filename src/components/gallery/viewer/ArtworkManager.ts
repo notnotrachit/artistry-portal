@@ -13,8 +13,9 @@ export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
   private toast: ReturnType<typeof useToast>['toast'];
-  private nextPosition = { x: 0, y: 0, z: -1.9 };
   private spacing = 2.5; // Space between artworks
+  private maxArtworksPerRow = 5;
+  private startPosition = { x: -5, y: 2, z: -1.9 };
 
   constructor(scene: THREE.Scene, toast: ReturnType<typeof useToast>['toast']) {
     this.scene = scene;
@@ -22,17 +23,15 @@ export class ArtworkManager {
     this.toast = toast;
   }
 
-  private calculateNextPosition() {
-    // Move to the right for next artwork
-    this.nextPosition.x += this.spacing;
+  private calculatePosition(index: number) {
+    const row = Math.floor(index / this.maxArtworksPerRow);
+    const col = index % this.maxArtworksPerRow;
     
-    // If we've reached the edge of the wall, move to next row
-    if (Math.abs(this.nextPosition.x) > 6) {
-      this.nextPosition.x = 0;
-      this.nextPosition.y -= this.spacing;
-    }
-    
-    return { ...this.nextPosition };
+    return {
+      x: this.startPosition.x + (col * this.spacing),
+      y: this.startPosition.y - (row * this.spacing),
+      z: this.startPosition.z
+    };
   }
 
   public loadArtwork(artwork: Artwork) {
@@ -53,8 +52,9 @@ export class ArtworkManager {
           material
         );
         
-        // Set position - use saved position or calculate next available spot
-        const position = artwork.position || this.calculateNextPosition();
+        // Use saved position or calculate new position based on index
+        const position = artwork.position || 
+          this.calculatePosition(this.artworks.size);
         
         artworkMesh.position.set(position.x, position.y, position.z);
         artworkMesh.castShadow = true;

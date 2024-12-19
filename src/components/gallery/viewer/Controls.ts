@@ -1,8 +1,6 @@
 import * as THREE from 'three';
 
 export class GalleryControls {
-  private isDragging = false;
-  private previousMousePosition = { x: 0, y: 0 };
   private camera: THREE.PerspectiveCamera;
   private element: HTMLElement;
   private editMode: boolean;
@@ -11,6 +9,8 @@ export class GalleryControls {
   private keyStates: { [key: string]: boolean } = {};
   private rotationSpeed = 0.02;
   private moveSpeed = 0.1;
+  private isDragging = false;
+  private previousMousePosition = { x: 0, y: 0 };
 
   constructor(
     camera: THREE.PerspectiveCamera, 
@@ -42,29 +42,39 @@ export class GalleryControls {
     this.keyStates[event.key] = false;
   };
 
-  public update() {
-    // Forward/Backward movement
+  private handleCameraMovement() {
     if (this.keyStates['ArrowUp']) {
       this.camera.position.z -= this.moveSpeed;
     }
     if (this.keyStates['ArrowDown']) {
       this.camera.position.z += this.moveSpeed;
     }
+  }
 
-    // Left/Right rotation around the Y axis
+  private handleCameraRotation() {
     if (this.keyStates['ArrowLeft']) {
-      this.camera.position.x = Math.cos(this.rotationSpeed) * this.camera.position.x - Math.sin(this.rotationSpeed) * this.camera.position.z;
-      this.camera.position.z = Math.sin(this.rotationSpeed) * this.camera.position.x + Math.cos(this.rotationSpeed) * this.camera.position.z;
-      this.camera.lookAt(0, 0, 0);
+      this.rotateCameraAroundCenter(this.rotationSpeed);
     }
     if (this.keyStates['ArrowRight']) {
-      this.camera.position.x = Math.cos(-this.rotationSpeed) * this.camera.position.x - Math.sin(-this.rotationSpeed) * this.camera.position.z;
-      this.camera.position.z = Math.sin(-this.rotationSpeed) * this.camera.position.x + Math.cos(-this.rotationSpeed) * this.camera.position.z;
-      this.camera.lookAt(0, 0, 0);
+      this.rotateCameraAroundCenter(-this.rotationSpeed);
     }
   }
 
+  private rotateCameraAroundCenter(angle: number) {
+    const x = this.camera.position.x;
+    const z = this.camera.position.z;
+    this.camera.position.x = Math.cos(angle) * x - Math.sin(angle) * z;
+    this.camera.position.z = Math.sin(angle) * x + Math.cos(angle) * z;
+    this.camera.lookAt(0, 0, 0);
+  }
+
+  public update() {
+    this.handleCameraMovement();
+    this.handleCameraRotation();
+  }
+
   private handleMouseDown = (event: MouseEvent) => {
+    if (!this.editMode || !this.selectedArtwork) return;
     this.isDragging = true;
     this.previousMousePosition = {
       x: event.clientX,
@@ -73,31 +83,25 @@ export class GalleryControls {
   };
 
   private handleMouseMove = (event: MouseEvent) => {
-    if (!this.isDragging) return;
+    if (!this.isDragging || !this.editMode || !this.selectedArtwork) return;
 
     const deltaMove = {
       x: event.clientX - this.previousMousePosition.x,
       y: event.clientY - this.previousMousePosition.y
     };
 
-    if (this.selectedArtwork && this.editMode) {
-      // Move artwork when in edit mode
-      const movementSpeed = 0.01;
-      this.selectedArtwork.position.x += deltaMove.x * movementSpeed;
-      this.selectedArtwork.position.y -= deltaMove.y * movementSpeed;
-      
-      if (this.onArtworkMove) {
-        const artworkId = this.selectedArtwork.userData.id;
-        this.onArtworkMove(artworkId, {
-          x: this.selectedArtwork.position.x,
-          y: this.selectedArtwork.position.y,
-          z: this.selectedArtwork.position.z
-        });
-      }
-    } else {
-      // Regular camera movement
-      this.camera.position.x -= deltaMove.x * 0.01;
-      this.camera.position.y += deltaMove.y * 0.01;
+    // Move artwork when in edit mode
+    const movementSpeed = 0.01;
+    this.selectedArtwork.position.x += deltaMove.x * movementSpeed;
+    this.selectedArtwork.position.y -= deltaMove.y * movementSpeed;
+    
+    if (this.onArtworkMove) {
+      const artworkId = this.selectedArtwork.userData.id;
+      this.onArtworkMove(artworkId, {
+        x: this.selectedArtwork.position.x,
+        y: this.selectedArtwork.position.y,
+        z: this.selectedArtwork.position.z
+      });
     }
 
     this.previousMousePosition = {
@@ -117,6 +121,10 @@ export class GalleryControls {
 
   public setSelectedArtwork(artwork: THREE.Mesh | null) {
     this.selectedArtwork = artwork;
+  }
+
+  public setEditMode(mode: boolean) {
+    this.editMode = mode;
   }
 
   public cleanup() {
