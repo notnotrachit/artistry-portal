@@ -104,6 +104,7 @@ const Index = () => {
 
         {selectedGallery && artworks ? (
           <SelectedGalleryView
+            galleryId={selectedGallery}
             galleryTitle={galleries?.find(g => g.id === selectedGallery)?.title || ""}
             artworks={artworks}
             onBack={() => setSelectedGallery(null)}
