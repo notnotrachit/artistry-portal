@@ -73,6 +73,11 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
             .eq('id', id);
 
           if (error) throw error;
+          
+          toast({
+            title: "Success",
+            description: "Artwork position and rotation saved",
+          });
         } catch (error) {
           console.error('Error updating artwork:', error);
           toast({
