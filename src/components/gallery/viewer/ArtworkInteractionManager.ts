@@ -22,7 +22,6 @@ export class ArtworkInteractionManager {
     this.editMode = editMode;
     this.onUpdateArtwork = onUpdateArtwork;
 
-    // Bind methods to maintain correct 'this' context
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
@@ -31,7 +30,6 @@ export class ArtworkInteractionManager {
   setEditMode(mode: boolean) {
     this.editMode = mode;
     if (!mode && this.selectedArtwork) {
-      // Save position and rotation when exiting edit mode
       this.saveArtworkTransform();
       this.selectedArtwork = null;
     }
@@ -43,8 +41,16 @@ export class ArtworkInteractionManager {
       const rotation = this.selectedArtwork.rotation;
       this.onUpdateArtwork(
         this.selectedArtwork.userData.id,
-        { x: position.x, y: position.y, z: position.z },
-        { x: rotation.x, y: rotation.y, z: rotation.z }
+        { 
+          x: Number(position.x.toFixed(3)), 
+          y: Number(position.y.toFixed(3)), 
+          z: Number(position.z.toFixed(3)) 
+        },
+        { 
+          x: Number(rotation.x.toFixed(3)), 
+          y: Number(rotation.y.toFixed(3)), 
+          z: Number(rotation.z.toFixed(3)) 
+        }
       );
     }
   }
@@ -82,11 +88,9 @@ export class ArtworkInteractionManager {
     const movementY = event.movementY * 0.01;
 
     if (this.isRotating) {
-      // Rotate artwork when holding shift
       this.selectedArtwork.rotation.y += movementX;
       this.selectedArtwork.rotation.x += movementY;
     } else {
-      // Move artwork
       this.selectedArtwork.position.x += movementX;
       this.selectedArtwork.position.y -= movementY;
     }

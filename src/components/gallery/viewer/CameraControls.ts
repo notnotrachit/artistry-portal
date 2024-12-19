@@ -40,7 +40,7 @@ export class CameraControls {
   };
 
   private handleMouseDown = (event: MouseEvent) => {
-    if (event.button === 2) {
+    if (event.button === 2) { // Right mouse button
       this.mouseState.isRightMouseDown = true;
       this.mouseState.lastMouseX = event.clientX;
       this.mouseState.lastMouseY = event.clientY;

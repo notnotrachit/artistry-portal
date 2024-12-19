@@ -155,8 +155,8 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
           {editMode && (
             <p className="text-sm text-muted-foreground">
               Click to select an artwork. Drag to move, hold Shift + drag to rotate.
-              Use WASD or arrow keys to move, Q/E to rotate left/right, R/F to look up/down.
-              Hold right mouse button and move to look around.
+              Use WASD or arrow keys to move around. Hold right mouse button and move to look around.
+              Use R/F keys to look up/down.
             </p>
           )}
         </div>
