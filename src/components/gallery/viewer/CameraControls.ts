@@ -15,6 +15,8 @@ export class CameraControls {
   private rotationSpeed = 0.02;
   private moveSpeed = 0.1;
   private bounds: Bounds;
+  private verticalAngle = 0;
+  private readonly maxVerticalAngle = Math.PI / 3; // 60 degrees up/down
 
   constructor(camera: THREE.PerspectiveCamera, bounds: Bounds) {
     this.camera = camera;
@@ -93,6 +95,7 @@ export class CameraControls {
   }
 
   private handleCameraRotation() {
+    // Horizontal rotation (Q/E keys)
     if (this.keyStates['q'] || this.keyStates['e']) {
       const rotationAngle = (this.keyStates['q'] ? 1 : -1) * this.rotationSpeed;
       
@@ -112,6 +115,30 @@ export class CameraControls {
       lookAtPoint.addVectors(this.camera.position, direction);
       
       // Update camera to look at the new point
+      this.camera.lookAt(lookAtPoint);
+    }
+
+    // Vertical rotation (R/F keys)
+    if (this.keyStates['r'] || this.keyStates['f']) {
+      const verticalRotation = (this.keyStates['r'] ? -1 : 1) * this.rotationSpeed;
+      this.verticalAngle = Math.max(
+        -this.maxVerticalAngle,
+        Math.min(this.maxVerticalAngle, this.verticalAngle + verticalRotation)
+      );
+
+      // Get current forward direction (excluding vertical component)
+      const direction = new THREE.Vector3();
+      this.camera.getWorldDirection(direction);
+      direction.y = 0;
+      direction.normalize();
+
+      // Apply vertical rotation
+      direction.y = Math.sin(this.verticalAngle);
+      direction.normalize();
+
+      // Update camera look-at point
+      const lookAtPoint = new THREE.Vector3();
+      lookAtPoint.addVectors(this.camera.position, direction);
       this.camera.lookAt(lookAtPoint);
     }
   }
