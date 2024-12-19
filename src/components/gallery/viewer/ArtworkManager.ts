@@ -1,11 +1,11 @@
 import * as THREE from 'three';
-import { type Toast } from '@/components/ui/toast';
+import { type ToastActionElement, type ToastProps } from '@/components/ui/toast';
 
 export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
 
-  constructor(private scene: THREE.Scene, private toast: (props: Toast) => void) {
+  constructor(private scene: THREE.Scene, private toast: (props: ToastProps) => void) {
     this.textureLoader = new THREE.TextureLoader();
   }
 
@@ -61,7 +61,7 @@ export class ArtworkManager {
         this.toast({
           variant: "destructive",
           title: "Error",
-          children: "Failed to load artwork image"
+          description: "Failed to load artwork image"
         });
       }
     );
