@@ -9,6 +9,7 @@ export class GalleryControls {
   private selectedArtwork: THREE.Mesh | null = null;
   private onArtworkMove?: (id: string, position: { x: number; y: number; z: number }) => void;
   private keyStates: { [key: string]: boolean } = {};
+  private rotationSpeed = 0.02;
   private moveSpeed = 0.1;
 
   constructor(
@@ -42,17 +43,24 @@ export class GalleryControls {
   };
 
   public update() {
+    // Forward/Backward movement
     if (this.keyStates['ArrowUp']) {
       this.camera.position.z -= this.moveSpeed;
     }
     if (this.keyStates['ArrowDown']) {
       this.camera.position.z += this.moveSpeed;
     }
+
+    // Left/Right rotation around the Y axis
     if (this.keyStates['ArrowLeft']) {
-      this.camera.position.x -= this.moveSpeed;
+      this.camera.position.x = Math.cos(this.rotationSpeed) * this.camera.position.x - Math.sin(this.rotationSpeed) * this.camera.position.z;
+      this.camera.position.z = Math.sin(this.rotationSpeed) * this.camera.position.x + Math.cos(this.rotationSpeed) * this.camera.position.z;
+      this.camera.lookAt(0, 0, 0);
     }
     if (this.keyStates['ArrowRight']) {
-      this.camera.position.x += this.moveSpeed;
+      this.camera.position.x = Math.cos(-this.rotationSpeed) * this.camera.position.x - Math.sin(-this.rotationSpeed) * this.camera.position.z;
+      this.camera.position.z = Math.sin(-this.rotationSpeed) * this.camera.position.x + Math.cos(-this.rotationSpeed) * this.camera.position.z;
+      this.camera.lookAt(0, 0, 0);
     }
   }
 
