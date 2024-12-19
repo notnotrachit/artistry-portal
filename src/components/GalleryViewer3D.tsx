@@ -23,6 +23,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
   const [editMode, setEditMode] = useState(false);
   const controlsRef = useRef<GalleryControls | null>(null);
   const artworkManagerRef = useRef<ArtworkManager | null>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -76,8 +77,9 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
 
     // Animation loop
     const animate = () => {
-      requestAnimationFrame(animate);
+      controlsRef.current?.update();
       renderer.render(scene, camera);
+      animationFrameRef.current = requestAnimationFrame(animate);
     };
     animate();
 
@@ -95,6 +97,9 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
     return () => {
       if (containerRef.current?.contains(renderer.domElement)) {
         containerRef.current.removeChild(renderer.domElement);
+      }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
       controlsRef.current?.cleanup();
       artworkManagerRef.current?.cleanup();

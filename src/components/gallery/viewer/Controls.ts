@@ -8,6 +8,8 @@ export class GalleryControls {
   private editMode: boolean;
   private selectedArtwork: THREE.Mesh | null = null;
   private onArtworkMove?: (id: string, position: { x: number; y: number; z: number }) => void;
+  private keyStates: { [key: string]: boolean } = {};
+  private moveSpeed = 0.1;
 
   constructor(
     camera: THREE.PerspectiveCamera, 
@@ -27,6 +29,31 @@ export class GalleryControls {
     window.addEventListener('mousemove', this.handleMouseMove);
     window.addEventListener('mouseup', this.handleMouseUp);
     this.element.addEventListener('wheel', this.handleWheel);
+    window.addEventListener('keydown', this.handleKeyDown);
+    window.addEventListener('keyup', this.handleKeyUp);
+  }
+
+  private handleKeyDown = (event: KeyboardEvent) => {
+    this.keyStates[event.key] = true;
+  };
+
+  private handleKeyUp = (event: KeyboardEvent) => {
+    this.keyStates[event.key] = false;
+  };
+
+  public update() {
+    if (this.keyStates['ArrowUp']) {
+      this.camera.position.z -= this.moveSpeed;
+    }
+    if (this.keyStates['ArrowDown']) {
+      this.camera.position.z += this.moveSpeed;
+    }
+    if (this.keyStates['ArrowLeft']) {
+      this.camera.position.x -= this.moveSpeed;
+    }
+    if (this.keyStates['ArrowRight']) {
+      this.camera.position.x += this.moveSpeed;
+    }
   }
 
   private handleMouseDown = (event: MouseEvent) => {
@@ -89,5 +116,7 @@ export class GalleryControls {
     window.removeEventListener('mousemove', this.handleMouseMove);
     window.removeEventListener('mouseup', this.handleMouseUp);
     this.element.removeEventListener('wheel', this.handleWheel);
+    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('keyup', this.handleKeyUp);
   }
 }
