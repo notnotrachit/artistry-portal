@@ -11,6 +11,8 @@ export const createWalls = (scene: THREE.Scene) => {
   );
   backWall.position.z = -30; // Moved further back
   backWall.receiveShadow = true;
+  // Add this line to make sure both sides of the wall are visible
+  backWall.material.side = THREE.DoubleSide;
   scene.add(backWall);
 
   // Side walls - increased depth significantly
