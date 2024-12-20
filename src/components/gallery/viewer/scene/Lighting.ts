@@ -39,8 +39,8 @@ export const createLighting = (scene: THREE.Scene) => {
   rightWallLight.position.set(18, 5, 0);
   scene.add(rightWallLight);
 
-  // Corner fill lights
-  const cornerLights = [
+  // Corner fill lights with proper typing
+  const cornerLights: Array<{ position: [number, number, number], color: number }> = [
     { position: [-18, 8, -12], color: 0xFDE1D3 },
     { position: [18, 8, -12], color: 0xD3E4FD },
     { position: [-18, 8, 12], color: 0xE5DEFF },
@@ -49,12 +49,12 @@ export const createLighting = (scene: THREE.Scene) => {
 
   cornerLights.forEach(({ position, color }) => {
     const light = new THREE.PointLight(color, 0.8, 50);
-    light.position.set(...position);
+    light.position.set(position[0], position[1], position[2]);
     scene.add(light);
   });
 
-  // Add subtle floor lights
-  const floorLights = [
+  // Floor lights with proper typing
+  const floorLights: Array<{ position: [number, number, number], color: number }> = [
     { position: [-10, -8, -8], color: 0xF2FCE2 },
     { position: [10, -8, -8], color: 0xFEF7CD },
     { position: [-10, -8, 8], color: 0xFFDEE2 },
@@ -63,7 +63,7 @@ export const createLighting = (scene: THREE.Scene) => {
 
   floorLights.forEach(({ position, color }) => {
     const light = new THREE.PointLight(color, 0.6, 40);
-    light.position.set(...position);
+    light.position.set(position[0], position[1], position[2]);
     scene.add(light);
   });
 };
