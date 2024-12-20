@@ -50,6 +50,8 @@ const Index = () => {
 
       return data.map(artwork => {
         let position: Position | null = null;
+        let rotation: { x: number; y: number; z: number } | null = null;
+
         if (artwork.position && typeof artwork.position === 'object') {
           const pos = artwork.position as Record<string, number>;
           if ('x' in pos && 'y' in pos && 'z' in pos) {
@@ -61,11 +63,23 @@ const Index = () => {
           }
         }
 
+        if (artwork.rotation && typeof artwork.rotation === 'object') {
+          const rot = artwork.rotation as Record<string, number>;
+          if ('x' in rot && 'y' in rot && 'z' in rot) {
+            rotation = {
+              x: Number(rot.x),
+              y: Number(rot.y),
+              z: Number(rot.z)
+            };
+          }
+        }
+
         return {
           id: artwork.id,
           title: artwork.title,
           image_url: artwork.image_url,
-          position
+          position,
+          rotation
         };
       });
     },

@@ -41,16 +41,19 @@ export class ArtworkManager {
         }
 
         // Set rotation if available, converting from degrees to radians
+        console.log(artwork);
         if (artwork.rotation && typeof artwork.rotation === 'object') {
-          const rotX = artwork.rotation.x !== null ? Number(artwork.rotation.x) * this.DEG_TO_RAD : 0;
-          const rotY = artwork.rotation.y !== null ? Number(artwork.rotation.y) * this.DEG_TO_RAD : 0;
-          const rotZ = artwork.rotation.z !== null ? Number(artwork.rotation.z) * this.DEG_TO_RAD : 0;
+          console.log(artwork.rotation);
+          const rotX = artwork.rotation.x !== null && artwork.rotation.x !== undefined ? Number(artwork.rotation.x) * this.DEG_TO_RAD : 0;
+          const rotY = artwork.rotation.y !== null && artwork.rotation.y !== undefined ? Number(artwork.rotation.y) * this.DEG_TO_RAD : 0;
+          const rotZ = artwork.rotation.z !== null && artwork.rotation.z !== undefined ? Number(artwork.rotation.z) * this.DEG_TO_RAD : 0;
           
           mesh.rotation.set(rotX, rotY, rotZ);
         }
 
         mesh.userData.id = artwork.id;
         mesh.userData.title = artwork.title;
+        mesh.userData.rotation = artwork.rotation; // Persist rotation
 
         this.scene.add(mesh);
         this.artworks.set(artwork.id, mesh);
