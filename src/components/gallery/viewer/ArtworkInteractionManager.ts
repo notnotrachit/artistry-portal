@@ -6,6 +6,7 @@ export class ArtworkInteractionManager {
   private selectedArtwork: THREE.Mesh | null = null;
   private isDragging = false;
   private isRotating = false;
+  private isZMoving = false;
   private mouse = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
   private editMode = false;
@@ -82,6 +83,7 @@ export class ArtworkInteractionManager {
     if (!this.editMode || !this.selectedArtwork) return;
     this.isDragging = true;
     this.isRotating = event.shiftKey;
+    this.isZMoving = event.altKey;
   }
 
   handleMouseMove(event: MouseEvent) {
@@ -91,9 +93,14 @@ export class ArtworkInteractionManager {
     const movementY = event.movementY * 0.01;
 
     if (this.isRotating) {
+      // Rotation mode (Shift + drag)
       this.selectedArtwork.rotation.y += movementX;
       this.selectedArtwork.rotation.x += movementY;
+    } else if (this.isZMoving) {
+      // Z-axis movement mode (Alt + drag)
+      this.selectedArtwork.position.z -= movementY;
     } else {
+      // Regular X-Y movement
       this.selectedArtwork.position.x += movementX;
       this.selectedArtwork.position.y -= movementY;
     }
@@ -105,11 +112,13 @@ export class ArtworkInteractionManager {
     }
     this.isDragging = false;
     this.isRotating = false;
+    this.isZMoving = false;
   }
 
   cleanup() {
     this.selectedArtwork = null;
     this.isDragging = false;
     this.isRotating = false;
+    this.isZMoving = false;
   }
 }
