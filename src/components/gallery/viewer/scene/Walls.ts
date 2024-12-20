@@ -4,18 +4,18 @@ import { createWallMaterial, createFloorMaterial, createCeilingMaterial } from '
 export const createWalls = (scene: THREE.Scene) => {
   const wallMaterial = createWallMaterial();
   
-  // Back wall - increased width and height
+  // Back wall - increased depth significantly
   const backWall = new THREE.Mesh(
     new THREE.PlaneGeometry(40, 20),
     wallMaterial
   );
-  backWall.position.z = -15;
+  backWall.position.z = -30; // Moved further back
   backWall.receiveShadow = true;
   scene.add(backWall);
 
-  // Side walls - increased depth and height
+  // Side walls - increased depth significantly
   const leftWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 20),
+    new THREE.PlaneGeometry(60, 20), // Increased depth
     wallMaterial
   );
   leftWall.rotation.y = Math.PI / 2;
@@ -24,7 +24,7 @@ export const createWalls = (scene: THREE.Scene) => {
   scene.add(leftWall);
 
   const rightWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 20),
+    new THREE.PlaneGeometry(60, 20), // Increased depth
     wallMaterial
   );
   rightWall.rotation.y = -Math.PI / 2;
@@ -34,7 +34,7 @@ export const createWalls = (scene: THREE.Scene) => {
 
   // Floor - increased size
   const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 30),
+    new THREE.PlaneGeometry(40, 60), // Increased depth
     createFloorMaterial()
   );
   floor.rotation.x = Math.PI / 2;
@@ -44,7 +44,7 @@ export const createWalls = (scene: THREE.Scene) => {
 
   // Ceiling - increased size
   const ceiling = new THREE.Mesh(
-    new THREE.PlaneGeometry(40, 30),
+    new THREE.PlaneGeometry(40, 60), // Increased depth
     createCeilingMaterial()
   );
   ceiling.rotation.x = -Math.PI / 2;
@@ -52,40 +52,14 @@ export const createWalls = (scene: THREE.Scene) => {
   ceiling.receiveShadow = true;
   scene.add(ceiling);
 
-  // Front wall sections - increased size
-  const frontWallLeft = new THREE.Mesh(
-    new THREE.PlaneGeometry(15, 20),
-    wallMaterial
-  );
-  frontWallLeft.position.z = 15;
-  frontWallLeft.position.x = -12.5;
-  frontWallLeft.receiveShadow = true;
-  scene.add(frontWallLeft);
-
-  const frontWallRight = new THREE.Mesh(
-    new THREE.PlaneGeometry(15, 20),
-    wallMaterial
-  );
-  frontWallRight.position.z = 15;
-  frontWallRight.position.x = 12.5;
-  frontWallRight.receiveShadow = true;
-  scene.add(frontWallRight);
-
-  const frontWallTop = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 5),
-    wallMaterial
-  );
-  frontWallTop.position.z = 15;
-  frontWallTop.position.y = 7.5;
-  frontWallTop.receiveShadow = true;
-  scene.add(frontWallTop);
+  // Removed the front wall sections that were creating the door-like appearance
 
   return {
     bounds: {
       minX: -19,
       maxX: 19,
-      minZ: -14,
-      maxZ: 14,
+      minZ: -29, // Increased depth bounds
+      maxZ: 29,  // Increased depth bounds
       minY: -9,
       maxY: 9
     }
