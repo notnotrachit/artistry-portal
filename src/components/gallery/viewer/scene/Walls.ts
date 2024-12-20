@@ -4,90 +4,90 @@ import { createWallMaterial, createFloorMaterial, createCeilingMaterial } from '
 export const createWalls = (scene: THREE.Scene) => {
   const wallMaterial = createWallMaterial();
   
-  // Back wall
+  // Back wall - increased width and height
   const backWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 16),
+    new THREE.PlaneGeometry(40, 20),
     wallMaterial
   );
-  backWall.position.z = -8;
+  backWall.position.z = -15;
   backWall.receiveShadow = true;
   scene.add(backWall);
 
-  // Side walls
+  // Side walls - increased depth and height
   const leftWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(16, 16),
+    new THREE.PlaneGeometry(30, 20),
     wallMaterial
   );
   leftWall.rotation.y = Math.PI / 2;
-  leftWall.position.x = -15;
+  leftWall.position.x = -20;
   leftWall.receiveShadow = true;
   scene.add(leftWall);
 
   const rightWall = new THREE.Mesh(
-    new THREE.PlaneGeometry(16, 16),
+    new THREE.PlaneGeometry(30, 20),
     wallMaterial
   );
   rightWall.rotation.y = -Math.PI / 2;
-  rightWall.position.x = 15;
+  rightWall.position.x = 20;
   rightWall.receiveShadow = true;
   scene.add(rightWall);
 
-  // Floor
+  // Floor - increased size
   const floor = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 16),
+    new THREE.PlaneGeometry(40, 30),
     createFloorMaterial()
   );
   floor.rotation.x = Math.PI / 2;
-  floor.position.y = -8;
+  floor.position.y = -10;
   floor.receiveShadow = true;
   scene.add(floor);
 
-  // Ceiling
+  // Ceiling - increased size
   const ceiling = new THREE.Mesh(
-    new THREE.PlaneGeometry(30, 16),
+    new THREE.PlaneGeometry(40, 30),
     createCeilingMaterial()
   );
   ceiling.rotation.x = -Math.PI / 2;
-  ceiling.position.y = 8;
+  ceiling.position.y = 10;
   ceiling.receiveShadow = true;
   scene.add(ceiling);
 
-  // Front wall sections
+  // Front wall sections - increased size
   const frontWallLeft = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 16),
+    new THREE.PlaneGeometry(15, 20),
     wallMaterial
   );
-  frontWallLeft.position.z = 8;
-  frontWallLeft.position.x = -10;
+  frontWallLeft.position.z = 15;
+  frontWallLeft.position.x = -12.5;
   frontWallLeft.receiveShadow = true;
   scene.add(frontWallLeft);
 
   const frontWallRight = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 16),
+    new THREE.PlaneGeometry(15, 20),
     wallMaterial
   );
-  frontWallRight.position.z = 8;
-  frontWallRight.position.x = 10;
+  frontWallRight.position.z = 15;
+  frontWallRight.position.x = 12.5;
   frontWallRight.receiveShadow = true;
   scene.add(frontWallRight);
 
   const frontWallTop = new THREE.Mesh(
-    new THREE.PlaneGeometry(10, 4),
+    new THREE.PlaneGeometry(10, 5),
     wallMaterial
   );
-  frontWallTop.position.z = 8;
-  frontWallTop.position.y = 6;
+  frontWallTop.position.z = 15;
+  frontWallTop.position.y = 7.5;
   frontWallTop.receiveShadow = true;
   scene.add(frontWallTop);
 
   return {
     bounds: {
-      minX: -14,
-      maxX: 14,
-      minZ: -7,
-      maxZ: 7,
-      minY: -7,
-      maxY: 7
+      minX: -19,
+      maxX: 19,
+      minZ: -14,
+      maxZ: 14,
+      minY: -9,
+      maxY: 9
     }
   };
 };

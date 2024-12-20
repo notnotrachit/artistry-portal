@@ -1,38 +1,69 @@
 import * as THREE from 'three';
 
 export const createLighting = (scene: THREE.Scene) => {
-  // Base ambient light
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  // Enhanced ambient light
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
   scene.add(ambientLight);
 
-  // Main overhead light
+  // Main overhead lights
   const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  mainLight.position.set(0, 10, 5);
+  mainLight.position.set(0, 15, 5);
   mainLight.castShadow = true;
   mainLight.shadow.mapSize.width = 2048;
   mainLight.shadow.mapSize.height = 2048;
   scene.add(mainLight);
 
-  // Back fill light
-  const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
-  backLight.position.set(0, 5, -10);
-  scene.add(backLight);
+  // Colorful accent lights
+  const colors = {
+    purple: 0x8B5CF6,
+    blue: 0x0EA5E9,
+    orange: 0xF97316,
+    pink: 0xD946EF
+  };
 
-  // Side accent lights
-  const leftLight = new THREE.PointLight(0xffeedd, 1, 50);
-  leftLight.position.set(-15, 5, 0);
-  scene.add(leftLight);
-
-  const rightLight = new THREE.PointLight(0xffeedd, 1, 50);
-  rightLight.position.set(15, 5, 0);
-  scene.add(rightLight);
-
-  // Corner fill lights
-  const backLeftLight = new THREE.PointLight(0xffeedd, 0.8, 40);
-  backLeftLight.position.set(-15, 5, -7);
+  // Back wall accent lights
+  const backLeftLight = new THREE.PointLight(colors.purple, 1, 60);
+  backLeftLight.position.set(-15, 5, -12);
   scene.add(backLeftLight);
 
-  const backRightLight = new THREE.PointLight(0xffeedd, 0.8, 40);
-  backRightLight.position.set(15, 5, -7);
+  const backRightLight = new THREE.PointLight(colors.blue, 1, 60);
+  backRightLight.position.set(15, 5, -12);
   scene.add(backRightLight);
+
+  // Side wall accent lights
+  const leftWallLight = new THREE.PointLight(colors.orange, 1, 60);
+  leftWallLight.position.set(-18, 5, 0);
+  scene.add(leftWallLight);
+
+  const rightWallLight = new THREE.PointLight(colors.pink, 1, 60);
+  rightWallLight.position.set(18, 5, 0);
+  scene.add(rightWallLight);
+
+  // Corner fill lights
+  const cornerLights = [
+    { position: [-18, 8, -12], color: 0xFDE1D3 },
+    { position: [18, 8, -12], color: 0xD3E4FD },
+    { position: [-18, 8, 12], color: 0xE5DEFF },
+    { position: [18, 8, 12], color: 0xFEC6A1 }
+  ];
+
+  cornerLights.forEach(({ position, color }) => {
+    const light = new THREE.PointLight(color, 0.8, 50);
+    light.position.set(...position);
+    scene.add(light);
+  });
+
+  // Add subtle floor lights
+  const floorLights = [
+    { position: [-10, -8, -8], color: 0xF2FCE2 },
+    { position: [10, -8, -8], color: 0xFEF7CD },
+    { position: [-10, -8, 8], color: 0xFFDEE2 },
+    { position: [10, -8, 8], color: 0xFDE1D3 }
+  ];
+
+  floorLights.forEach(({ position, color }) => {
+    const light = new THREE.PointLight(color, 0.6, 40);
+    light.position.set(...position);
+    scene.add(light);
+  });
 };

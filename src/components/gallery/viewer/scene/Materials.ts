@@ -3,7 +3,7 @@ import * as THREE from 'three';
 export const createWallMaterial = () => {
   return new THREE.MeshStandardMaterial({
     color: 0xf5f5f5,
-    roughness: 0.7,
+    roughness: 0.5,
     metalness: 0.1,
     side: THREE.DoubleSide,
   });
@@ -11,9 +11,9 @@ export const createWallMaterial = () => {
 
 export const createFloorMaterial = () => {
   return new THREE.MeshStandardMaterial({
-    color: 0xe0e0e0,
-    roughness: 0.8,
-    metalness: 0.1,
+    color: 0xe8e8e8,
+    roughness: 0.3,
+    metalness: 0.2,
     side: THREE.DoubleSide
   });
 };
@@ -21,7 +21,7 @@ export const createFloorMaterial = () => {
 export const createCeilingMaterial = () => {
   return new THREE.MeshStandardMaterial({
     color: 0xfafafa,
-    roughness: 0.9,
+    roughness: 0.7,
     metalness: 0.1,
     side: THREE.DoubleSide
   });
