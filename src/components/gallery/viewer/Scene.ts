@@ -4,38 +4,54 @@ export const createScene = () => {
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x1a1a1a);
   
-  // Ambient light for base illumination
-  const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+  // Enhanced ambient light for better base illumination
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
   scene.add(ambientLight);
 
-  // Main directional light
+  // Main directional light from above
   const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
-  mainLight.position.set(5, 5, 5);
+  mainLight.position.set(0, 10, 5);
   mainLight.castShadow = true;
+  mainLight.shadow.mapSize.width = 2048;
+  mainLight.shadow.mapSize.height = 2048;
   scene.add(mainLight);
 
-  // Accent lights for atmosphere
-  const blueLight = new THREE.PointLight(0x0044ff, 2, 25);
-  blueLight.position.set(-10, 3, 10);
-  scene.add(blueLight);
+  // Additional directional light from back to eliminate dark spots
+  const backLight = new THREE.DirectionalLight(0xffffff, 0.4);
+  backLight.position.set(0, 5, -10);
+  scene.add(backLight);
 
-  const purpleLight = new THREE.PointLight(0xff00ff, 2, 25);
-  purpleLight.position.set(10, 3, 10);
-  scene.add(purpleLight);
+  // Accent lights for atmosphere
+  const leftLight = new THREE.PointLight(0xffeedd, 1, 50);
+  leftLight.position.set(-15, 5, 0);
+  scene.add(leftLight);
+
+  const rightLight = new THREE.PointLight(0xffeedd, 1, 50);
+  rightLight.position.set(15, 5, 0);
+  scene.add(rightLight);
+
+  // Soft light from the back corners
+  const backLeftLight = new THREE.PointLight(0xffeedd, 0.8, 40);
+  backLeftLight.position.set(-15, 5, -7);
+  scene.add(backLeftLight);
+
+  const backRightLight = new THREE.PointLight(0xffeedd, 0.8, 40);
+  backRightLight.position.set(15, 5, -7);
+  scene.add(backRightLight);
 
   return scene;
 };
 
 export const createWalls = (scene: THREE.Scene) => {
-  // Create a more sophisticated material with subtle texture
+  // Create a sophisticated material with better light response
   const wallMaterial = new THREE.MeshStandardMaterial({
     color: 0xf5f5f5,
-    roughness: 0.8,
-    metalness: 0.2,
+    roughness: 0.7,
+    metalness: 0.1,
     side: THREE.DoubleSide,
   });
 
-  // Back wall - increased size
+  // Back wall
   const backWall = new THREE.Mesh(
     new THREE.PlaneGeometry(30, 16),
     wallMaterial
@@ -44,7 +60,7 @@ export const createWalls = (scene: THREE.Scene) => {
   backWall.receiveShadow = true;
   scene.add(backWall);
 
-  // Side walls - increased size
+  // Side walls
   const leftWall = new THREE.Mesh(
     new THREE.PlaneGeometry(16, 16),
     wallMaterial
@@ -63,10 +79,10 @@ export const createWalls = (scene: THREE.Scene) => {
   rightWall.receiveShadow = true;
   scene.add(rightWall);
 
-  // Floor with a more sophisticated material - increased size
+  // Floor with a slightly darker, matte material
   const floorMaterial = new THREE.MeshStandardMaterial({
-    color: 0x303030,
-    roughness: 0.9,
+    color: 0xe0e0e0,
+    roughness: 0.8,
     metalness: 0.1,
     side: THREE.DoubleSide
   });
@@ -80,17 +96,24 @@ export const createWalls = (scene: THREE.Scene) => {
   floor.receiveShadow = true;
   scene.add(floor);
 
-  // Ceiling - increased size
+  // Ceiling with slightly different material for depth
+  const ceilingMaterial = new THREE.MeshStandardMaterial({
+    color: 0xfafafa,
+    roughness: 0.9,
+    metalness: 0.1,
+    side: THREE.DoubleSide
+  });
+
   const ceiling = new THREE.Mesh(
     new THREE.PlaneGeometry(30, 16),
-    wallMaterial
+    ceilingMaterial
   );
   ceiling.rotation.x = -Math.PI / 2;
   ceiling.position.y = 8;
   ceiling.receiveShadow = true;
   scene.add(ceiling);
 
-  // Front wall with entrance - increased size
+  // Front wall sections with entrance
   const frontWallLeft = new THREE.Mesh(
     new THREE.PlaneGeometry(10, 16),
     wallMaterial
