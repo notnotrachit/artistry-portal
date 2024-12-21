@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { GalleryPreview } from "@/components/gallery/GalleryPreview";
 import { Database } from "@/integrations/supabase/types";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { HelpCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { HelpCircle, PlusCircle } from "lucide-react";
+import { AddArtworkDialog } from "@/components/gallery/AddArtworkDialog";
 
 type Artwork = Database['public']['Tables']['artworks']['Row'];
 
@@ -61,6 +62,7 @@ const GalleryDetails = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [showAddArtwork, setShowAddArtwork] = useState(false);
   const session = useSession();
 
   const { data: gallery, isLoading: galleryLoading } = useQuery({
@@ -121,12 +123,21 @@ const GalleryDetails = () => {
             Exit Gallery
           </Button>
           {isOwner && (
-            <Button
-              variant={isEditing ? "destructive" : "outline"}
-              onClick={() => setIsEditing(!isEditing)}
-            >
-              {isEditing ? "Exit Edit Mode" : "Edit Gallery"}
-            </Button>
+            <>
+              <Button
+                variant={isEditing ? "destructive" : "outline"}
+                onClick={() => setIsEditing(!isEditing)}
+              >
+                {isEditing ? "Exit Edit Mode" : "Edit Gallery"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => setShowAddArtwork(true)}
+              >
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Artwork
+              </Button>
+            </>
           )}
         </div>
         <div className="absolute top-4 right-4 z-10">
@@ -138,6 +149,19 @@ const GalleryDetails = () => {
           <GalleryViewer3D artworks={artworks || []} isOwner={isEditing} />
         </div>
         <ControlsDialog open={showControls} onClose={() => setShowControls(false)} />
+        {isOwner && (
+          <Dialog open={showAddArtwork} onOpenChange={setShowAddArtwork}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Artwork</DialogTitle>
+              </DialogHeader>
+              <AddArtworkDialog 
+                galleryId={gallery.id} 
+                onClose={() => setShowAddArtwork(false)} 
+              />
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     );
   }
