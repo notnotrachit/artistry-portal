@@ -17,27 +17,27 @@ export const GalleryPreview = ({
   isOwner
 }: GalleryPreviewProps) => {
   return (
-    <div className="bg-white rounded-lg p-6 space-y-6">
+    <div className="bg-zinc-900/50 border border-zinc-800 rounded-lg p-6 space-y-6">
       {description && (
-        <p className="text-gallery-600">{description}</p>
+        <p className="text-zinc-300">{description}</p>
       )}
       
-      <div className="aspect-video bg-gallery-100 rounded-lg flex items-center justify-center">
+      <div className="aspect-video bg-zinc-800/50 rounded-lg flex items-center justify-center overflow-hidden">
         {previewImageUrl ? (
           <img 
             src={previewImageUrl} 
             alt="Gallery preview" 
-            className="rounded-lg object-contain max-h-full"
+            className="rounded-lg object-contain max-h-full hover:scale-105 transition-transform duration-300"
           />
         ) : (
-          <p className="text-gallery-400">No artworks in this gallery yet</p>
+          <p className="text-zinc-500">No artworks in this gallery yet</p>
         )}
       </div>
 
       <div className="flex gap-2">
         <Button 
           size="lg" 
-          className="flex-1"
+          className="flex-1 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
           onClick={onEnterGallery}
         >
           Enter Gallery
@@ -46,6 +46,7 @@ export const GalleryPreview = ({
           <Button 
             size="lg"
             variant="outline"
+            className="border-zinc-700 text-white hover:bg-zinc-800"
             onClick={onEditGallery}
           >
             <Pencil className="w-4 h-4 mr-2" />

@@ -18,13 +18,25 @@ const Login = () => {
   }, [navigate]);
 
   return (
-    <div className="min-h-screen bg-gallery-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
-        <h1 className="text-2xl font-semibold text-center mb-6 text-gallery-900">Welcome to Art Gallery</h1>
+    <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black flex items-center justify-center p-4">
+      <div className="w-full max-w-md bg-zinc-900/50 rounded-lg border border-zinc-800 shadow-xl p-6">
+        <h1 className="text-3xl font-bold text-center mb-6 bg-clip-text text-transparent bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500">
+          Welcome to VisionVault
+        </h1>
         <Auth
           supabaseClient={supabase}
-          appearance={{ theme: ThemeSupa }}
-          theme="light"
+          appearance={{ 
+            theme: ThemeSupa,
+            variables: {
+              default: {
+                colors: {
+                  brand: '#6366f1',
+                  brandAccent: '#8b5cf6'
+                }
+              }
+            }
+          }}
+          theme="dark"
           providers={[]}
         />
       </div>

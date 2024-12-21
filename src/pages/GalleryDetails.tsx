@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@supabase/auth-helpers-react";
@@ -66,6 +66,8 @@ const GalleryDetails = () => {
   const [showControls, setShowControls] = useState(false);
   const [showAddArtwork, setShowAddArtwork] = useState(false);
   const session = useSession();
+  const artworkInteractionRef = useRef(null);
+  const artworkManagerRef = useRef(null);
 
   const { data: gallery, isLoading: galleryLoading } = useQuery({
     queryKey: ["gallery", id],
@@ -126,24 +128,42 @@ const GalleryDetails = () => {
     return (
       <div className="fixed inset-0 bg-black w-screen h-screen">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
-          <Button variant="outline" onClick={handleExitGallery}>
+          <Button 
+            variant="outline" 
+            className="border-zinc-700 text-white hover:bg-zinc-800"
+            onClick={handleExitGallery}
+          >
             Exit Gallery
           </Button>
           {isOwner && (
             <>
               <Button
                 variant={isEditing ? "destructive" : "outline"}
+                className={!isEditing ? "border-zinc-700 text-white hover:bg-zinc-800" : ""}
                 onClick={() => setIsEditing(!isEditing)}
               >
                 {isEditing ? "Exit Edit Mode" : "Edit Gallery"}
               </Button>
               <Button
                 variant="outline"
+                className="border-zinc-700 text-white hover:bg-zinc-800"
                 onClick={() => setShowAddArtwork(true)}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Artwork
               </Button>
+              {isEditing && (
+                <Button
+                  variant="destructive"
+                  onClick={() => {
+                    if (artworkInteractionRef.current && artworkManagerRef.current) {
+                      artworkInteractionRef.current.deleteSelectedArtwork(artworkManagerRef.current);
+                    }
+                  }}
+                >
+                  Delete Artwork
+                </Button>
+              )}
             </>
           )}
         </div>
@@ -174,13 +194,17 @@ const GalleryDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gallery-50">
+    <div className="min-h-screen bg-gradient-to-b from-zinc-900 to-black text-white">
       <div className="container py-8 space-y-8">
         <GalleryHeader
           title={gallery.title}
           ownerName={gallery.owner?.full_name || gallery.owner?.username}
           isPublic={gallery.is_public}
-          onBack={() => navigate("/")}
+          onBack={() => navigate("/explore")}
+          onLogout={() => supabase.auth.signOut()}
+          showNewGallery={true}
+          session={session}
+          supabase={supabase}
         />
         <GalleryPreview
           description={gallery.description}

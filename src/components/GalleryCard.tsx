@@ -74,8 +74,8 @@ export const GalleryCard = ({
       whileHover={{ scale: 1.02 }}
       className="w-full"
     >
-      <Card className="overflow-hidden border border-gallery-200 bg-white/80 backdrop-blur-sm">
-        <div className="relative aspect-[16/9] w-full overflow-hidden bg-gallery-100">
+      <Card className="overflow-hidden border-zinc-800 bg-zinc-900/50 backdrop-blur-sm text-white">
+        <div className="relative aspect-[16/9] w-full overflow-hidden bg-zinc-800">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -83,23 +83,23 @@ export const GalleryCard = ({
               className="object-cover w-full h-full transition-transform duration-300 hover:scale-105"
             />
           ) : (
-            <div className="flex items-center justify-center h-full text-gallery-400">
+            <div className="flex items-center justify-center h-full text-zinc-400">
               No artworks yet
             </div>
           )}
           <div className="absolute top-4 right-4 flex gap-2">
-            <Badge variant="secondary" className="bg-white/90 text-gallery-800">
+            <Badge variant="secondary" className="bg-zinc-900/80 text-zinc-100 border-zinc-700">
               {template}
             </Badge>
-            <Badge variant="secondary" className="bg-white/90 text-gallery-800">
+            <Badge variant="secondary" className="bg-zinc-900/80 text-zinc-100 border-zinc-700">
               {artworkCount} {artworkCount === 1 ? 'artwork' : 'artworks'}
             </Badge>
           </div>
         </div>
         <CardHeader className="space-y-1">
           <div className="flex justify-between items-center">
-            <CardTitle className="text-xl font-medium text-gallery-900">{title}</CardTitle>
-            <Badge variant="secondary" className="text-sm">
+            <CardTitle className="text-xl font-medium text-zinc-100">{title}</CardTitle>
+            <Badge variant="secondary" className="text-sm bg-zinc-800 text-zinc-100 border-zinc-700">
               {isPublic ? (
                 <>
                   <Eye className="w-3 h-3 mr-1" /> Public
@@ -111,7 +111,7 @@ export const GalleryCard = ({
               )}
             </Badge>
           </div>
-          <CardDescription className="text-gallery-600">{description}</CardDescription>
+          <CardDescription className="text-zinc-400">{description}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center">
@@ -119,14 +119,16 @@ export const GalleryCard = ({
               <Button
                 variant="ghost"
                 size="sm"
-                className={`gap-2 ${isLiked ? 'text-red-500 hover:text-red-600' : 'text-gallery-500 hover:text-gallery-600'}`}
+                className={`gap-2 hover:bg-zinc-800 ${
+                  isLiked ? 'text-pink-500 hover:text-pink-400' : 'text-zinc-400 hover:text-zinc-300'
+                }`}
                 onClick={handleLike}
               >
                 <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
                 {likeCount}
               </Button>
             </div>
-            <button className="text-sm font-medium text-gallery-900 hover:text-gallery-700 transition-colors">
+            <button className="text-sm font-medium text-indigo-400 hover:text-indigo-300 transition-colors">
               View Details →
             </button>
           </div>
