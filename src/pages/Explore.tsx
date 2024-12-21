@@ -17,7 +17,7 @@ const Explore = () => {
         .from("galleries")
         .select(`
           *,
-          owner:profiles(username, full_name)
+          owner:profiles!galleries_owner_id_fkey(username, full_name)
         `)
         .eq("is_public", true)
         .order("view_count", { ascending: false });

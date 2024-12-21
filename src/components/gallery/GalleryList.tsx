@@ -10,6 +10,10 @@ interface Gallery {
   template: string;
   is_public: boolean;
   like_count: number;
+  owner: {
+    username: string | null;
+    full_name: string | null;
+  } | null;
 }
 
 interface GalleryListProps {
@@ -27,19 +31,28 @@ export const GalleryList = ({ galleries, onSelectGallery, isLoading }: GalleryLi
     queryFn: async () => {
       const galleryIds = galleries.map(g => g.id);
       
-      // Fetch artwork previews
-      const { data: artworks } = await supabase
+      // Fetch artwork previews and counts in a single query
+      const { data: artworksData } = await supabase
         .from("artworks")
         .select("gallery_id, image_url")
-        .in("gallery_id", galleryIds)
-        .order("created_at", { ascending: true });
+        .in("gallery_id", galleryIds);
 
-      // Count artworks per gallery
-      const { data: artworkCounts } = await supabase
-        .from("artworks")
-        .select("gallery_id, count", { count: "exact" })
-        .in("gallery_id", galleryIds)
-        .group("gallery_id");
+      // Create preview map and count map
+      const previewMap = new Map();
+      const countMap = new Map();
+      
+      // Initialize counts to 0
+      galleryIds.forEach(id => countMap.set(id, 0));
+      
+      // Process artworks to get previews and counts
+      artworksData?.forEach(artwork => {
+        // Set preview if not already set
+        if (!previewMap.has(artwork.gallery_id)) {
+          previewMap.set(artwork.gallery_id, artwork.image_url);
+        }
+        // Increment count
+        countMap.set(artwork.gallery_id, (countMap.get(artwork.gallery_id) || 0) + 1);
+      });
 
       // Fetch like status for logged-in user
       let userLikes = new Set<string>();
@@ -52,20 +65,6 @@ export const GalleryList = ({ galleries, onSelectGallery, isLoading }: GalleryLi
         
         userLikes = new Set(likes?.map(like => like.gallery_id) || []);
       }
-
-      // Create preview map
-      const previewMap = new Map();
-      artworks?.forEach(artwork => {
-        if (!previewMap.has(artwork.gallery_id)) {
-          previewMap.set(artwork.gallery_id, artwork.image_url);
-        }
-      });
-
-      // Create count map
-      const countMap = new Map();
-      artworkCounts?.forEach(count => {
-        countMap.set(count.gallery_id, parseInt(count.count));
-      });
 
       return {
         previews: previewMap,
