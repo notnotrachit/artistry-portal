@@ -23,7 +23,7 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
   // Initialize Three.js scene
   const { scene, camera, renderer } = useThreeJsScene(containerRef);
 
-  // Initialize artwork transformations - passing both required arguments
+  // Initialize artwork transformations with all required arguments
   const { artworkInteraction } = useArtworkTransforms(scene, camera, artworks, isOwner);
 
   useEffect(() => {
