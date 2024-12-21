@@ -16,6 +16,7 @@ export class ArtworkManager {
     image_url: string;
     position: { x: number; y: number; z: number } | null;
     rotation?: { x: number; y: number; z: number } | null;
+    scale?: { x: number; y: number } | null;
   }) {
     this.textureLoader.load(
       artwork.image_url,
@@ -41,19 +42,24 @@ export class ArtworkManager {
         }
 
         // Set rotation if available, converting from degrees to radians
-        console.log(artwork);
         if (artwork.rotation && typeof artwork.rotation === 'object') {
-          console.log(artwork.rotation);
           const rotX = artwork.rotation.x !== null && artwork.rotation.x !== undefined ? Number(artwork.rotation.x) * this.DEG_TO_RAD : 0;
           const rotY = artwork.rotation.y !== null && artwork.rotation.y !== undefined ? Number(artwork.rotation.y) * this.DEG_TO_RAD : 0;
           const rotZ = artwork.rotation.z !== null && artwork.rotation.z !== undefined ? Number(artwork.rotation.z) * this.DEG_TO_RAD : 0;
-          
           mesh.rotation.set(rotX, rotY, rotZ);
+        }
+
+        // Set scale if available
+        if (artwork.scale && typeof artwork.scale === 'object') {
+          const scaleX = artwork.scale.x !== null && artwork.scale.x !== undefined ? Number(artwork.scale.x) : 1;
+          const scaleY = artwork.scale.y !== null && artwork.scale.y !== undefined ? Number(artwork.scale.y) : 1;
+          mesh.scale.set(scaleX, scaleY, 1);
         }
 
         mesh.userData.id = artwork.id;
         mesh.userData.title = artwork.title;
-        mesh.userData.rotation = artwork.rotation; // Persist rotation
+        mesh.userData.rotation = artwork.rotation;
+        mesh.userData.scale = artwork.scale;
 
         this.scene.add(mesh);
         this.artworks.set(artwork.id, mesh);
@@ -64,7 +70,7 @@ export class ArtworkManager {
         this.toast({
           variant: "destructive",
           title: "Error",
-          children: "Failed to load artwork image"
+          description: "Failed to load artwork image"
         });
       }
     );

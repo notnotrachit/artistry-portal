@@ -63,19 +63,18 @@ export class TransformManager {
     if (this.isResizing && this.activeHandle) {
       const deltaX = (event.clientX - this.initialMousePosition.x) * 0.01;
       
-      // Calculate new scale based on the X movement only to maintain aspect ratio
+      // Calculate new scale based on handle position
       const scaleMultiplier = this.activeHandle.userData.handleIndex % 2 === 0 ? -1 : 1;
       const newScaleX = Math.max(0.1, this.initialScale.x + deltaX * scaleMultiplier);
       
       // Get the original aspect ratio from the geometry
       const geometry = selectedArtwork.geometry as THREE.PlaneGeometry;
-      const aspectRatio = geometry.parameters.height / geometry.parameters.width;
+      const originalWidth = geometry.parameters.width;
+      const originalHeight = geometry.parameters.height;
+      const aspectRatio = originalHeight / originalWidth;
       
-      // Calculate Y scale based on X scale to maintain aspect ratio
-      const newScaleY = newScaleX * aspectRatio;
-
-      // Apply the new scales
-      selectedArtwork.scale.set(newScaleX, newScaleY, 1);
+      // Apply scales while maintaining aspect ratio
+      selectedArtwork.scale.set(newScaleX, newScaleX * aspectRatio, 1);
       
       // Update handle positions
       this.selectionManager.getResizeHandles().updateAllHandlePositions(selectedArtwork);
@@ -120,6 +119,24 @@ export class TransformManager {
       ) as THREE.Mesh;
       
       if (mesh) {
+        console.log('Saving artwork:', {
+          id: mesh.userData.id,
+          position: {
+            x: Number(mesh.position.x.toFixed(3)),
+            y: Number(mesh.position.y.toFixed(3)),
+            z: Number(mesh.position.z.toFixed(3))
+          },
+          rotation: {
+            x: Number((mesh.rotation.x * 180 / Math.PI).toFixed(3)),
+            y: Number((mesh.rotation.y * 180 / Math.PI).toFixed(3)),
+            z: Number((mesh.rotation.z * 180 / Math.PI).toFixed(3))
+          },
+          scale: {
+            x: Number(mesh.scale.x.toFixed(3)),
+            y: Number(mesh.scale.y.toFixed(3))
+          }
+        });
+        
         this.onUpdateArtwork(
           mesh.userData.id,
           {
