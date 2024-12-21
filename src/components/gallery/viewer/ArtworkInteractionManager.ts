@@ -6,9 +6,12 @@ export class ArtworkInteractionManager {
   private scene: THREE.Scene;
   private camera: THREE.Camera;
   private selectedArtwork: THREE.Mesh | null = null;
+  private resizeHandles: THREE.Mesh[] = [];
   private isDragging = false;
   private isRotating = false;
   private isZMoving = false;
+  private isResizing = false;
+  private activeHandle: THREE.Mesh | null = null;
   private mouse = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
   private editMode = false;
@@ -39,10 +42,67 @@ export class ArtworkInteractionManager {
     }
   }
 
+  private createResizeHandles() {
+    const handleGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    const handleMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    
+    // Clear existing handles
+    this.resizeHandles.forEach(handle => {
+      this.scene.remove(handle);
+    });
+    this.resizeHandles = [];
+
+    if (!this.selectedArtwork) return;
+
+    // Create handles at corners
+    const positions = [
+      { x: -0.5, y: -0.5 },
+      { x: 0.5, y: -0.5 },
+      { x: -0.5, y: 0.5 },
+      { x: 0.5, y: 0.5 }
+    ];
+
+    positions.forEach((pos, index) => {
+      const handle = new THREE.Mesh(handleGeometry, handleMaterial);
+      handle.userData.isHandle = true;
+      handle.userData.handleIndex = index;
+      this.updateHandlePosition(handle, pos.x, pos.y);
+      this.scene.add(handle);
+      this.resizeHandles.push(handle);
+    });
+  }
+
+  private updateHandlePosition(handle: THREE.Mesh, x: number, y: number) {
+    if (!this.selectedArtwork) return;
+    
+    const artwork = this.selectedArtwork;
+    const scale = artwork.scale;
+    handle.position.set(
+      artwork.position.x + x * scale.x,
+      artwork.position.y + y * scale.y,
+      artwork.position.z
+    );
+  }
+
+  private updateAllHandlePositions() {
+    if (!this.selectedArtwork) return;
+    
+    const positions = [
+      { x: -0.5, y: -0.5 },
+      { x: 0.5, y: -0.5 },
+      { x: -0.5, y: 0.5 },
+      { x: 0.5, y: 0.5 }
+    ];
+
+    this.resizeHandles.forEach((handle, index) => {
+      this.updateHandlePosition(handle, positions[index].x, positions[index].y);
+    });
+  }
+
   setEditMode(mode: boolean) {
     this.editMode = mode;
-    if (!mode && this.selectedArtwork) {
-      this.selectedArtwork = null;
+    if (!mode) {
+      this.clearSelection();
     }
 
     if (mode) {
@@ -50,6 +110,14 @@ export class ArtworkInteractionManager {
     } else {
       this.keyboardController.disable();
     }
+  }
+
+  private clearSelection() {
+    this.selectedArtwork = null;
+    this.resizeHandles.forEach(handle => {
+      this.scene.remove(handle);
+    });
+    this.resizeHandles = [];
   }
 
   handleClick(event: MouseEvent, container: HTMLElement) {
@@ -63,39 +131,67 @@ export class ArtworkInteractionManager {
     const intersects = this.raycaster.intersectObjects(this.scene.children);
 
     if (intersects.length > 0) {
-      const artwork = intersects[0].object as THREE.Mesh;
-      if (artwork.userData.id) {
-        this.selectedArtwork = artwork;
+      const object = intersects[0].object as THREE.Mesh;
+      if (object.userData.id) {
+        this.selectedArtwork = object;
+        this.createResizeHandles();
+      } else if (object.userData.isHandle) {
+        // Keep the current selection if clicking on a handle
+        return;
       }
     } else {
-      this.selectedArtwork = null;
+      this.clearSelection();
     }
   }
 
   handleMouseDown(event: MouseEvent) {
-    if (!this.editMode || !this.selectedArtwork) return;
-    this.isDragging = true;
-    this.isRotating = event.shiftKey;
-    this.isZMoving = event.altKey;
+    if (!this.editMode) return;
+
+    const rect = (event.target as HTMLElement).getBoundingClientRect();
+    this.mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+    this.mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
+
+    this.raycaster.setFromCamera(this.mouse, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.scene.children);
+
+    if (intersects.length > 0) {
+      const object = intersects[0].object as THREE.Mesh;
+      if (object.userData.isHandle) {
+        this.isResizing = true;
+        this.activeHandle = object;
+      } else if (this.selectedArtwork) {
+        this.isDragging = true;
+        this.isRotating = event.shiftKey;
+        this.isZMoving = event.altKey;
+      }
+    }
   }
 
   handleMouseMove(event: MouseEvent) {
-    if (!this.isDragging || !this.selectedArtwork) return;
+    if (!this.editMode) return;
 
     const movementX = event.movementX * 0.01;
     const movementY = event.movementY * 0.01;
 
-    if (this.keyboardController.isKeyPressed('t')) {  // Changed from 'r' to 't'
-      this.transformController.handleScale(this.selectedArtwork, movementY);
-    } else if (this.isRotating) {
-      this.transformController.handleRotation(this.selectedArtwork, movementX, movementY);
-    } else {
-      this.transformController.handlePositionChange(
-        this.selectedArtwork,
-        movementX,
-        movementY,
-        this.isZMoving
-      );
+    if (this.isResizing && this.selectedArtwork && this.activeHandle) {
+      const handleIndex = this.activeHandle.userData.handleIndex;
+      const scaleX = this.selectedArtwork.scale.x + (handleIndex % 2 === 0 ? -movementX : movementX);
+      const scaleY = this.selectedArtwork.scale.y + (handleIndex < 2 ? -movementY : movementY);
+      
+      this.transformController.handleScale(this.selectedArtwork, scaleX, scaleY);
+      this.updateAllHandlePositions();
+    } else if (this.isDragging && this.selectedArtwork) {
+      if (this.isRotating) {
+        this.transformController.handleRotation(this.selectedArtwork, movementX, movementY);
+      } else {
+        this.transformController.handlePositionChange(
+          this.selectedArtwork,
+          movementX,
+          movementY,
+          this.isZMoving
+        );
+      }
+      this.updateAllHandlePositions();
     }
   }
 
@@ -103,13 +199,12 @@ export class ArtworkInteractionManager {
     this.isDragging = false;
     this.isRotating = false;
     this.isZMoving = false;
+    this.isResizing = false;
+    this.activeHandle = null;
   }
 
   cleanup() {
     this.keyboardController.cleanup();
-    this.selectedArtwork = null;
-    this.isDragging = false;
-    this.isRotating = false;
-    this.isZMoving = false;
+    this.clearSelection();
   }
 }

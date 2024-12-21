@@ -27,10 +27,9 @@ export class TransformController {
     this.notifyUpdate(mesh);
   }
 
-  handleScale(mesh: THREE.Mesh, movementY: number) {
-    const scaleChange = -movementY;
-    mesh.scale.x = Math.max(0.1, mesh.scale.x + scaleChange);
-    mesh.scale.y = Math.max(0.1, mesh.scale.y + scaleChange);
+  handleScale(mesh: THREE.Mesh, scaleX: number, scaleY: number) {
+    mesh.scale.x = Math.max(0.1, scaleX);
+    mesh.scale.y = Math.max(0.1, scaleY);
     this.notifyUpdate(mesh);
   }
 
