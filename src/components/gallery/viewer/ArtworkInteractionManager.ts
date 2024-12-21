@@ -7,17 +7,18 @@ export class ArtworkInteractionManager {
   private isDragging = false;
   private isRotating = false;
   private isZMoving = false;
+  private isScaling = false;
   private mouse = new THREE.Vector2();
   private raycaster = new THREE.Raycaster();
   private editMode = false;
-  private onUpdateArtwork: (id: string, position: { x: number; y: number; z: number }, rotation: { x: number; y: number; z: number }) => void;
+  private onUpdateArtwork: (id: string, position: { x: number; y: number; z: number }, rotation: { x: number; y: number; z: number }, scale?: { x: number; y: number }) => void;
   private readonly RAD_TO_DEG = 180 / Math.PI;
 
   constructor(
     scene: THREE.Scene,
     camera: THREE.Camera,
     editMode: boolean,
-    onUpdateArtwork: (id: string, position: { x: number; y: number; z: number }, rotation: { x: number; y: number; z: number }) => void
+    onUpdateArtwork: (id: string, position: { x: number; y: number; z: number }, rotation: { x: number; y: number; z: number }, scale?: { x: number; y: number }) => void
   ) {
     this.scene = scene;
     this.camera = camera;
@@ -41,8 +42,8 @@ export class ArtworkInteractionManager {
     if (this.selectedArtwork) {
       const position = this.selectedArtwork.position;
       const rotation = this.selectedArtwork.rotation;
+      const scale = this.selectedArtwork.scale;
       
-      // Convert rotation from radians to degrees before saving
       this.onUpdateArtwork(
         this.selectedArtwork.userData.id,
         { 
@@ -54,6 +55,10 @@ export class ArtworkInteractionManager {
           x: Number((rotation.x * this.RAD_TO_DEG).toFixed(3)), 
           y: Number((rotation.y * this.RAD_TO_DEG).toFixed(3)), 
           z: Number((rotation.z * this.RAD_TO_DEG).toFixed(3)) 
+        },
+        {
+          x: Number(scale.x.toFixed(3)),
+          y: Number(scale.y.toFixed(3))
         }
       );
     }
@@ -84,6 +89,7 @@ export class ArtworkInteractionManager {
     this.isDragging = true;
     this.isRotating = event.shiftKey;
     this.isZMoving = event.altKey;
+    this.isScaling = event.key === 's' || event.key === 'S';
   }
 
   handleMouseMove(event: MouseEvent) {
@@ -92,7 +98,12 @@ export class ArtworkInteractionManager {
     const movementX = event.movementX * 0.01;
     const movementY = event.movementY * 0.01;
 
-    if (this.isRotating) {
+    if (this.isScaling) {
+      // Scale mode (S + drag)
+      const scaleChange = -movementY; // Invert Y movement for more intuitive scaling
+      this.selectedArtwork.scale.x = Math.max(0.1, this.selectedArtwork.scale.x + scaleChange);
+      this.selectedArtwork.scale.y = Math.max(0.1, this.selectedArtwork.scale.y + scaleChange);
+    } else if (this.isRotating) {
       // Rotation mode (Shift + drag)
       this.selectedArtwork.rotation.y += movementX;
       this.selectedArtwork.rotation.x += movementY;
@@ -113,6 +124,7 @@ export class ArtworkInteractionManager {
     this.isDragging = false;
     this.isRotating = false;
     this.isZMoving = false;
+    this.isScaling = false;
   }
 
   cleanup() {
@@ -120,5 +132,6 @@ export class ArtworkInteractionManager {
     this.isDragging = false;
     this.isRotating = false;
     this.isZMoving = false;
+    this.isScaling = false;
   }
 }

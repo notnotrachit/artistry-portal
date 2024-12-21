@@ -14,6 +14,7 @@ interface GalleryViewer3DProps {
     image_url: string;
     position: { x: number; y: number; z: number } | null;
     rotation?: { x: number; y: number; z: number } | null;
+    scale?: { x: number; y: number } | null;
   }>;
   isOwner?: boolean;
 }
@@ -60,13 +61,14 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       scene,
       camera,
       isOwner,
-      async (id, position, rotation) => {
+      async (id, position, rotation, scale) => {
         try {
           const { error } = await supabase
             .from('artworks')
             .update({ 
               position,
-              rotation
+              rotation,
+              scale
             })
             .eq('id', id);
 
@@ -74,13 +76,13 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
           
           toast({
             title: "Success",
-            description: "Artwork position and rotation saved",
+            description: "Artwork position, rotation and scale saved",
           });
         } catch (error) {
           console.error('Error updating artwork:', error);
           toast({
             title: "Error",
-            description: "Failed to save artwork position and rotation",
+            description: "Failed to save artwork position, rotation and scale",
             variant: "destructive"
           });
         }
@@ -142,6 +144,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
           Click to select an artwork. Drag to move in X-Y plane.
           Hold Alt + drag to move closer/further (Z-axis).
           Hold Shift + drag to rotate.
+          Hold S + drag to scale.
           Use WASD or arrow keys to move around. Hold right mouse button and move to look around.
           Use R/F keys to look up/down.
         </p>
