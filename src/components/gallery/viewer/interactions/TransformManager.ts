@@ -8,8 +8,9 @@ export class TransformManager {
   private isZMoving = false;
   private isResizing = false;
   private activeHandle: THREE.Mesh | null = null;
-  private initialAspectRatio = 1;
-  private initialScale = new THREE.Vector2(1, 1);
+  private initialMousePosition = new THREE.Vector2();
+  private initialScale = new THREE.Vector2();
+  private initialArtworkPosition = new THREE.Vector3();
   private modifiedArtworks: Set<string> = new Set();
 
   constructor(
@@ -44,8 +45,9 @@ export class TransformManager {
       if (object.userData.isHandle && selectedArtwork) {
         this.isResizing = true;
         this.activeHandle = object;
-        this.initialAspectRatio = selectedArtwork.scale.x / selectedArtwork.scale.y;
-        this.initialScale.set(selectedArtwork.scale.x, selectedArtwork.scale.y);
+        this.initialMousePosition.set(event.clientX, event.clientY);
+        this.initialScale.copy(selectedArtwork.scale);
+        this.initialArtworkPosition.copy(selectedArtwork.position);
       } else if (selectedArtwork) {
         this.isDragging = true;
         this.isRotating = event.shiftKey;
@@ -58,22 +60,29 @@ export class TransformManager {
     const selectedArtwork = this.selectionManager.getSelectedArtwork();
     if (!selectedArtwork) return;
 
-    const movementX = event.movementX * 0.01;
-    const movementY = event.movementY * 0.01;
-
     if (this.isResizing && this.activeHandle) {
+      const deltaX = (event.clientX - this.initialMousePosition.x) * 0.01;
+      const deltaY = (event.clientY - this.initialMousePosition.y) * 0.01;
+      
+      // Calculate new scale based on handle position and movement
       const handleIndex = this.activeHandle.userData.handleIndex;
       const scaleMultiplier = handleIndex % 2 === 0 ? -1 : 1;
-      const scaleDelta = (movementX * scaleMultiplier);
       
-      // Calculate new scale while preserving aspect ratio
-      const newScaleX = Math.max(0.1, this.initialScale.x + scaleDelta);
-      const newScaleY = newScaleX / this.initialAspectRatio;
-      
+      // Calculate new scale while maintaining minimum size
+      const newScaleX = Math.max(0.1, this.initialScale.x + deltaX * scaleMultiplier);
+      const aspectRatio = selectedArtwork.geometry instanceof THREE.PlaneGeometry ? 
+        selectedArtwork.geometry.parameters.width / selectedArtwork.geometry.parameters.height : 1;
+      const newScaleY = newScaleX / aspectRatio;
+
       selectedArtwork.scale.set(newScaleX, newScaleY, 1);
+      
+      // Update handle positions
       this.selectionManager.getResizeHandles().updateAllHandlePositions(selectedArtwork);
       this.markArtworkAsModified(selectedArtwork);
     } else if (this.isDragging) {
+      const movementX = event.movementX * 0.01;
+      const movementY = event.movementY * 0.01;
+
       if (this.isRotating) {
         selectedArtwork.rotation.y += movementX;
         selectedArtwork.rotation.x += movementY;

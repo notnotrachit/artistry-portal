@@ -11,14 +11,19 @@ export class ResizeHandles {
   createHandles(artwork: THREE.Mesh) {
     this.clearHandles();
     
-    const handleGeometry = new THREE.BoxGeometry(0.1, 0.1, 0.1);
-    const handleMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    const handleGeometry = new THREE.BoxGeometry(0.15, 0.15, 0.15); // Slightly larger handles
+    const handleMaterial = new THREE.MeshBasicMaterial({ 
+      color: 0xffff00,
+      transparent: true,
+      opacity: 0.8 
+    });
     
+    // Corner positions
     const positions = [
-      { x: -0.5, y: -0.5 },
-      { x: 0.5, y: -0.5 },
-      { x: -0.5, y: 0.5 },
-      { x: 0.5, y: 0.5 }
+      { x: -1, y: -1 }, // Bottom-left
+      { x: 1, y: -1 },  // Bottom-right
+      { x: -1, y: 1 },  // Top-left
+      { x: 1, y: 1 }    // Top-right
     ];
 
     positions.forEach((pos, index) => {
@@ -32,20 +37,31 @@ export class ResizeHandles {
   }
 
   updateHandlePosition(handle: THREE.Mesh, artwork: THREE.Mesh, x: number, y: number) {
-    const scale = artwork.scale;
-    handle.position.set(
-      artwork.position.x + x * scale.x,
-      artwork.position.y + y * scale.y,
-      artwork.position.z
-    );
+    // Get artwork dimensions
+    const geometry = artwork.geometry as THREE.PlaneGeometry;
+    const width = (geometry.parameters.width * artwork.scale.x) / 2;
+    const height = (geometry.parameters.height * artwork.scale.y) / 2;
+
+    // Calculate handle position in artwork's local space
+    const localX = x * width;
+    const localY = y * height;
+
+    // Convert to world space
+    const worldPos = new THREE.Vector3(localX, localY, 0);
+    worldPos.applyMatrix4(artwork.matrixWorld);
+
+    handle.position.copy(worldPos);
+    
+    // Apply artwork's rotation to handle
+    handle.rotation.copy(artwork.rotation);
   }
 
   updateAllHandlePositions(artwork: THREE.Mesh) {
     const positions = [
-      { x: -0.5, y: -0.5 },
-      { x: 0.5, y: -0.5 },
-      { x: -0.5, y: 0.5 },
-      { x: 0.5, y: 0.5 }
+      { x: -1, y: -1 },
+      { x: 1, y: -1 },
+      { x: -1, y: 1 },
+      { x: 1, y: 1 }
     ];
 
     this.handles.forEach((handle, index) => {
@@ -56,6 +72,10 @@ export class ResizeHandles {
   clearHandles() {
     this.handles.forEach(handle => {
       this.scene.remove(handle);
+      handle.geometry.dispose();
+      if (handle.material instanceof THREE.Material) {
+        handle.material.dispose();
+      }
     });
     this.handles = [];
   }
