@@ -85,7 +85,7 @@ export class ArtworkInteractionManager {
     const movementX = event.movementX * 0.01;
     const movementY = event.movementY * 0.01;
 
-    if (this.keyboardController.isKeyPressed('r')) {  // Changed from 's' to 'r'
+    if (this.keyboardController.isKeyPressed('t')) {  // Changed from 'r' to 't'
       this.transformController.handleScale(this.selectedArtwork, movementY);
     } else if (this.isRotating) {
       this.transformController.handleRotation(this.selectedArtwork, movementX, movementY);
