@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { useToast } from '@/components/ui/use-toast';
-import { Button } from '@/components/ui/button';
 import { createScene, createWalls } from './gallery/viewer/Scene';
 import { CameraControls } from './gallery/viewer/CameraControls';
 import { ArtworkManager } from './gallery/viewer/ArtworkManager';
@@ -22,7 +21,6 @@ interface GalleryViewer3DProps {
 const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
-  const [editMode, setEditMode] = useState(false);
   const cameraControlsRef = useRef<CameraControls | null>(null);
   const artworkManagerRef = useRef<ArtworkManager | null>(null);
   const artworkInteractionRef = useRef<ArtworkInteractionManager | null>(null);
@@ -61,7 +59,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
     artworkInteractionRef.current = new ArtworkInteractionManager(
       scene,
       camera,
-      editMode,
+      isOwner,
       async (id, position, rotation) => {
         try {
           const { error } = await supabase
@@ -135,33 +133,18 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
     };
-  }, [artworks, editMode, toast]);
-
-  // Update interaction manager edit mode when it changes
-  useEffect(() => {
-    artworkInteractionRef.current?.setEditMode(editMode);
-  }, [editMode]);
+  }, [artworks, isOwner, toast]);
 
   return (
-    <div className="space-y-4 h-full">
+    <div className="h-full">
       {isOwner && (
-        <div className="space-y-2">
-          <Button 
-            onClick={() => setEditMode(!editMode)}
-            variant={editMode ? "destructive" : "default"}
-          >
-            {editMode ? "Exit Edit Mode" : "Edit Artwork Positions"}
-          </Button>
-          {editMode && (
-            <p className="text-sm text-muted-foreground">
-              Click to select an artwork. Drag to move in X-Y plane.
-              Hold Alt + drag to move closer/further (Z-axis).
-              Hold Shift + drag to rotate.
-              Use WASD or arrow keys to move around. Hold right mouse button and move to look around.
-              Use R/F keys to look up/down.
-            </p>
-          )}
-        </div>
+        <p className="text-sm text-muted-foreground mb-2">
+          Click to select an artwork. Drag to move in X-Y plane.
+          Hold Alt + drag to move closer/further (Z-axis).
+          Hold Shift + drag to rotate.
+          Use WASD or arrow keys to move around. Hold right mouse button and move to look around.
+          Use R/F keys to look up/down.
+        </p>
       )}
       <div 
         ref={containerRef} 
