@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { GalleryPreview } from "@/components/gallery/GalleryPreview";
 import { Database } from "@/integrations/supabase/types";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { HelpCircle } from "lucide-react";
 
 type Artwork = Database['public']['Tables']['artworks']['Row'];
 
@@ -34,11 +36,29 @@ const transformArtworkData = (artwork: Artwork) => {
   };
 };
 
+const ControlsDialog = ({ open, onClose }: { open: boolean; onClose: () => void }) => (
+  <Dialog open={open} onOpenChange={onClose}>
+    <DialogContent>
+      <div className="space-y-2">
+        <h2 className="text-lg font-semibold">Gallery Controls</h2>
+        <ul className="space-y-1 text-sm">
+          <li>• Left/Right Arrow Keys: Move camera left/right</li>
+          <li>• Up/Down Arrow Keys: Move camera forward/backward</li>
+          <li>• R Key: Move perspective up</li>
+          <li>• F Key: Move perspective down</li>
+          <li>• Left Click + Drag: Rotate camera view</li>
+        </ul>
+      </div>
+    </DialogContent>
+  </Dialog>
+);
+
 const GalleryDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [showControls, setShowControls] = useState(false);
   const session = useSession();
 
   const { data: gallery, isLoading: galleryLoading } = useQuery({
@@ -107,9 +127,15 @@ const GalleryDetails = () => {
             </Button>
           )}
         </div>
+        <div className="absolute top-4 right-4 z-10">
+          <Button variant="outline" size="icon" onClick={() => setShowControls(true)}>
+            <HelpCircle className="h-4 w-4" />
+          </Button>
+        </div>
         <div className="w-full h-full">
           <GalleryViewer3D artworks={artworks || []} isOwner={isEditing} />
         </div>
+        <ControlsDialog open={showControls} onClose={() => setShowControls(false)} />
       </div>
     );
   }
