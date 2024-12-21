@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { GalleryCard } from "@/components/GalleryCard";
 import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@supabase/auth-helpers-react";
 
 interface Gallery {
   id: string;
@@ -8,6 +9,7 @@ interface Gallery {
   description: string | null;
   template: string;
   is_public: boolean;
+  like_count: number;
 }
 
 interface GalleryListProps {
@@ -17,28 +19,59 @@ interface GalleryListProps {
 }
 
 export const GalleryList = ({ galleries, onSelectGallery, isLoading }: GalleryListProps) => {
-  // Fetch first artwork for each gallery
-  const { data: artworkPreviews } = useQuery({
-    queryKey: ["gallery-previews"],
+  const session = useSession();
+
+  // Fetch first artwork for each gallery and artwork counts
+  const { data: galleryData } = useQuery({
+    queryKey: ["gallery-data", galleries.map(g => g.id)],
     queryFn: async () => {
       const galleryIds = galleries.map(g => g.id);
-      const { data, error } = await supabase
+      
+      // Fetch artwork previews
+      const { data: artworks } = await supabase
         .from("artworks")
         .select("gallery_id, image_url")
         .in("gallery_id", galleryIds)
         .order("created_at", { ascending: true });
 
-      if (error) throw error;
+      // Count artworks per gallery
+      const { data: artworkCounts } = await supabase
+        .from("artworks")
+        .select("gallery_id, count", { count: "exact" })
+        .in("gallery_id", galleryIds)
+        .group("gallery_id");
 
-      // Create a map of gallery_id to first artwork image_url
+      // Fetch like status for logged-in user
+      let userLikes = new Set<string>();
+      if (session?.user) {
+        const { data: likes } = await supabase
+          .from("gallery_likes")
+          .select("gallery_id")
+          .eq("user_id", session.user.id)
+          .in("gallery_id", galleryIds);
+        
+        userLikes = new Set(likes?.map(like => like.gallery_id) || []);
+      }
+
+      // Create preview map
       const previewMap = new Map();
-      data.forEach(artwork => {
+      artworks?.forEach(artwork => {
         if (!previewMap.has(artwork.gallery_id)) {
           previewMap.set(artwork.gallery_id, artwork.image_url);
         }
       });
 
-      return previewMap;
+      // Create count map
+      const countMap = new Map();
+      artworkCounts?.forEach(count => {
+        countMap.set(count.gallery_id, parseInt(count.count));
+      });
+
+      return {
+        previews: previewMap,
+        counts: countMap,
+        userLikes
+      };
     },
     enabled: galleries.length > 0,
   });
@@ -67,10 +100,13 @@ export const GalleryList = ({ galleries, onSelectGallery, isLoading }: GalleryLi
           <GalleryCard
             title={gallery.title}
             description={gallery.description || ""}
-            imageUrl={artworkPreviews?.get(gallery.id) || null}
-            artworkCount={0}
+            imageUrl={galleryData?.previews.get(gallery.id) || null}
+            artworkCount={galleryData?.counts.get(gallery.id) || 0}
             template={gallery.template}
             isPublic={gallery.is_public}
+            likeCount={gallery.like_count}
+            isLiked={galleryData?.userLikes.has(gallery.id) || false}
+            galleryId={gallery.id}
           />
         </div>
       ))}

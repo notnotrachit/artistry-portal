@@ -1,7 +1,12 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Heart } from "lucide-react";
+import { useSession } from "@supabase/auth-helpers-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface GalleryCardProps {
   title: string;
@@ -10,6 +15,9 @@ interface GalleryCardProps {
   artworkCount: number;
   template: string;
   isPublic: boolean;
+  likeCount: number;
+  isLiked: boolean;
+  galleryId: string;
 }
 
 export const GalleryCard = ({ 
@@ -18,8 +26,46 @@ export const GalleryCard = ({
   imageUrl, 
   artworkCount, 
   template,
-  isPublic 
+  isPublic,
+  likeCount,
+  isLiked,
+  galleryId
 }: GalleryCardProps) => {
+  const session = useSession();
+  const queryClient = useQueryClient();
+
+  const handleLike = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!session) {
+      toast.error("Please sign in to like galleries");
+      return;
+    }
+
+    try {
+      if (isLiked) {
+        await supabase
+          .from("gallery_likes")
+          .delete()
+          .eq("gallery_id", galleryId)
+          .eq("user_id", session.user.id);
+      } else {
+        await supabase
+          .from("gallery_likes")
+          .insert({
+            gallery_id: galleryId,
+            user_id: session.user.id
+          });
+      }
+      
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["gallery-data"] });
+      queryClient.invalidateQueries({ queryKey: ["public-galleries"] });
+    } catch (error) {
+      toast.error("Failed to update like status");
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -69,7 +115,17 @@ export const GalleryCard = ({
         </CardHeader>
         <CardContent>
           <div className="flex justify-between items-center">
-            <div className="text-sm text-gallery-500">Last updated 2 days ago</div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`gap-2 ${isLiked ? 'text-red-500 hover:text-red-600' : 'text-gallery-500 hover:text-gallery-600'}`}
+                onClick={handleLike}
+              >
+                <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                {likeCount}
+              </Button>
+            </div>
             <button className="text-sm font-medium text-gallery-900 hover:text-gallery-700 transition-colors">
               View Details →
             </button>
