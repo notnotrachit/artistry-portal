@@ -20,12 +20,11 @@ interface GalleryHeaderProps {
   isPublic?: boolean;
   onBack?: () => void;
   onLogout?: () => void;
-  showNewGallery?: boolean;
   session?: any;
   supabase?: any;
 }
 
-export const GalleryHeader = ({ title, ownerName, isPublic, onBack, onLogout, showNewGallery = false, session, supabase }: GalleryHeaderProps) => {
+export const GalleryHeader = ({ title, ownerName, isPublic, onBack, session, supabase }: GalleryHeaderProps) => {
   const { toast } = useToast();
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const user = session?.user;
@@ -82,15 +81,6 @@ export const GalleryHeader = ({ title, ownerName, isPublic, onBack, onLogout, sh
         )}
       </div>
       <div className="flex gap-2 items-center">
-        {showNewGallery && (
-          <Button
-            onClick={() => setShowCreateDialog(true)}
-            className="border-zinc-700 text-white hover:bg-zinc-800"
-          >
-            <PlusCircle className="w-4 h-4 mr-2" />
-            New Gallery
-          </Button>
-        )}
         {typeof isPublic !== "undefined" && (
           <Badge className="bg-zinc-800 border-zinc-700 text-zinc-100">
             {isPublic ? (

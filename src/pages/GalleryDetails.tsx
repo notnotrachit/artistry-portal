@@ -129,7 +129,6 @@ const GalleryDetails = () => {
       <div className="fixed inset-0 bg-black w-screen h-screen">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
           <Button 
-            variant="outline" 
             className="border-zinc-700 text-white hover:bg-zinc-800"
             onClick={handleExitGallery}
           >
@@ -138,21 +137,20 @@ const GalleryDetails = () => {
           {isOwner && (
             <>
               <Button
-                variant={isEditing ? "destructive" : "outline"}
+                variant={isEditing ? "destructive" : "default"}
                 className={!isEditing ? "border-zinc-700 text-white hover:bg-zinc-800" : ""}
                 onClick={() => setIsEditing(!isEditing)}
               >
                 {isEditing ? "Exit Edit Mode" : "Edit Gallery"}
               </Button>
               <Button
-                variant="outline"
                 className="border-zinc-700 text-white hover:bg-zinc-800"
                 onClick={() => setShowAddArtwork(true)}
               >
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Add Artwork
               </Button>
-              {isEditing && (
+              {/* {isEditing && (
                 <Button
                   variant="destructive"
                   onClick={() => {
@@ -163,7 +161,7 @@ const GalleryDetails = () => {
                 >
                   Delete Artwork
                 </Button>
-              )}
+              )} */}
             </>
           )}
         </div>

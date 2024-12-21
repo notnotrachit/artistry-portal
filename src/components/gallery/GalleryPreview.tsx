@@ -45,7 +45,6 @@ export const GalleryPreview = ({
         {isOwner && (
           <Button 
             size="lg"
-            variant="outline"
             className="border-zinc-700 text-white hover:bg-zinc-800"
             onClick={onEditGallery}
           >
