@@ -98,15 +98,18 @@ const GalleryDetails = () => {
 
   if (isFullscreen) {
     return (
-      <div className="fixed inset-0 bg-black">
-        <Button
-          variant="outline"
-          className="absolute top-4 left-4 z-10"
-          onClick={() => setIsFullscreen(false)}
-        >
-          Exit Fullscreen
-        </Button>
-        <GalleryViewer3D artworks={artworks || []} />
+      <div className="fixed inset-0 bg-black w-screen h-screen">
+        <div className="absolute top-4 left-4 z-10">
+          <Button
+            variant="outline"
+            onClick={() => setIsFullscreen(false)}
+          >
+            Exit Fullscreen
+          </Button>
+        </div>
+        <div className="w-full h-full">
+          <GalleryViewer3D artworks={artworks || []} />
+        </div>
       </div>
     );
   }
