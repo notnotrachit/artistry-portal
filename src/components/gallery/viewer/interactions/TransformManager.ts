@@ -62,18 +62,19 @@ export class TransformManager {
 
     if (this.isResizing && this.activeHandle) {
       const deltaX = (event.clientX - this.initialMousePosition.x) * 0.01;
-      const deltaY = (event.clientY - this.initialMousePosition.y) * 0.01;
       
-      // Calculate new scale based on handle position and movement
-      const handleIndex = this.activeHandle.userData.handleIndex;
-      const scaleMultiplier = handleIndex % 2 === 0 ? -1 : 1;
-      
-      // Calculate new scale while maintaining minimum size
+      // Calculate new scale based on the X movement only to maintain aspect ratio
+      const scaleMultiplier = this.activeHandle.userData.handleIndex % 2 === 0 ? -1 : 1;
       const newScaleX = Math.max(0.1, this.initialScale.x + deltaX * scaleMultiplier);
-      const aspectRatio = selectedArtwork.geometry instanceof THREE.PlaneGeometry ? 
-        selectedArtwork.geometry.parameters.width / selectedArtwork.geometry.parameters.height : 1;
-      const newScaleY = newScaleX / aspectRatio;
+      
+      // Get the original aspect ratio from the geometry
+      const geometry = selectedArtwork.geometry as THREE.PlaneGeometry;
+      const aspectRatio = geometry.parameters.height / geometry.parameters.width;
+      
+      // Calculate Y scale based on X scale to maintain aspect ratio
+      const newScaleY = newScaleX * aspectRatio;
 
+      // Apply the new scales
       selectedArtwork.scale.set(newScaleX, newScaleY, 1);
       
       // Update handle positions
