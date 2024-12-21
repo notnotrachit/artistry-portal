@@ -6,12 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import GalleryViewer3D from "@/components/GalleryViewer3D";
-import { ArrowLeft, Share2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Share2, Eye, EyeOff, Pencil } from "lucide-react";
 import { Database } from "@/integrations/supabase/types";
+import { useSession } from "@supabase/auth-helpers-react";
 
 type Artwork = Database['public']['Tables']['artworks']['Row'];
 
-// Helper function to transform the position and rotation data
 const transformArtworkData = (artwork: Artwork) => {
   const defaultPosition = { x: 0, y: 0, z: 0 };
   const defaultRotation = { x: 0, y: 0, z: 0 };
@@ -36,6 +36,8 @@ const GalleryDetails = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const session = useSession();
 
   const { data: gallery, isLoading: galleryLoading } = useQuery({
     queryKey: ["gallery", id],
@@ -96,19 +98,32 @@ const GalleryDetails = () => {
     return <div>Gallery not found</div>;
   }
 
+  const isOwner = session?.user?.id === gallery.owner_id;
+
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 bg-black w-screen h-screen">
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 left-4 z-10 flex gap-2">
           <Button
             variant="outline"
-            onClick={() => setIsFullscreen(false)}
+            onClick={() => {
+              setIsFullscreen(false);
+              setIsEditing(false);
+            }}
           >
-            Exit Fullscreen
+            Exit Gallery
           </Button>
+          {isOwner && (
+            <Button
+              variant={isEditing ? "destructive" : "outline"}
+              onClick={() => setIsEditing(!isEditing)}
+            >
+              {isEditing ? "Exit Edit Mode" : "Edit Gallery"}
+            </Button>
+          )}
         </div>
         <div className="w-full h-full">
-          <GalleryViewer3D artworks={artworks || []} />
+          <GalleryViewer3D artworks={artworks || []} isOwner={isEditing} />
         </div>
       </div>
     );
@@ -156,17 +171,40 @@ const GalleryDetails = () => {
             <p className="text-gallery-600">{gallery.description}</p>
           )}
           
-          <div className="aspect-[16/9] relative overflow-hidden rounded-lg">
-            <GalleryViewer3D artworks={artworks || []} />
+          <div className="aspect-video bg-gallery-100 rounded-lg flex items-center justify-center">
+            {artworks && artworks.length > 0 ? (
+              <img 
+                src={artworks[0].image_url} 
+                alt="Gallery preview" 
+                className="rounded-lg object-contain max-h-full"
+              />
+            ) : (
+              <p className="text-gallery-400">No artworks in this gallery yet</p>
+            )}
           </div>
 
-          <Button 
-            size="lg" 
-            className="w-full"
-            onClick={() => setIsFullscreen(true)}
-          >
-            Enter Gallery
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              size="lg" 
+              className="flex-1"
+              onClick={() => setIsFullscreen(true)}
+            >
+              Enter Gallery
+            </Button>
+            {isOwner && (
+              <Button 
+                size="lg"
+                variant="outline"
+                onClick={() => {
+                  setIsFullscreen(true);
+                  setIsEditing(true);
+                }}
+              >
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Gallery
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
