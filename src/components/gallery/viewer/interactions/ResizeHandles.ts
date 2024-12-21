@@ -37,22 +37,21 @@ export class ResizeHandles {
   }
 
   updateHandlePosition(handle: THREE.Mesh, artwork: THREE.Mesh, x: number, y: number) {
-    // Get artwork dimensions
     const geometry = artwork.geometry as THREE.PlaneGeometry;
-    const width = (geometry.parameters.width * artwork.scale.x) / 2;
-    const height = (geometry.parameters.height * artwork.scale.y) / 2;
+    geometry.computeBoundingBox();
+    const box = geometry.boundingBox;
+    if (!box) return; // Safety check
 
-    // Calculate handle position in artwork's local space
-    const localX = x * width;
-    const localY = y * height;
+    // Scale bounding box to artwork scale
+    const min = new THREE.Vector3(box.min.x * artwork.scale.x, box.min.y * artwork.scale.y, 0);
+    const max = new THREE.Vector3(box.max.x * artwork.scale.x, box.max.y * artwork.scale.y, 0);
 
-    // Convert to world space
-    const worldPos = new THREE.Vector3(localX, localY, 0);
-    worldPos.applyMatrix4(artwork.matrixWorld);
+    // Pick corners: negative => min, positive => max
+    const localPos = new THREE.Vector3(x < 0 ? min.x : max.x, y < 0 ? min.y : max.y, 0);
+    localPos.applyMatrix4(artwork.matrixWorld);
 
-    handle.position.copy(worldPos);
-    
-    // Apply artwork's rotation to handle
+    handle.position.copy(localPos);
+    handle.position.z += 0.01; // Slight offset so handles remain in front
     handle.rotation.copy(artwork.rotation);
   }
 

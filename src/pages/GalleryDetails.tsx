@@ -17,10 +17,12 @@ type Artwork = Database['public']['Tables']['artworks']['Row'];
 const transformArtworkData = (artwork: Artwork) => {
   const defaultPosition = { x: 0, y: 0, z: 0 };
   const defaultRotation = { x: 0, y: 0, z: 0 };
+  const defaultDescription = "";
 
   return {
     id: artwork.id,
     title: artwork.title,
+    description: artwork.description || defaultDescription,
     image_url: artwork.image_url,
     position: artwork.position ? 
       (typeof artwork.position === 'string' ? 
@@ -49,7 +51,7 @@ const ControlsDialog = ({ open, onClose }: { open: boolean; onClose: () => void 
           <li>• F Key: Move perspective down</li>
           <li>• Page Up: Raise camera height</li>
           <li>• Page Down: Lower camera height</li>
-          <li>• Left Click + Drag: Rotate camera view</li>
+          <li>• Right Click + Drag: Rotate camera view</li>
         </ul>
       </div>
     </DialogContent>
@@ -101,7 +103,12 @@ const GalleryDetails = () => {
   });
 
   if (galleryLoading || artworksLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="fixed inset-0 flex items-center justify-center bg-black/60 z-50 text-white">
+        <div className="animate-spin w-8 h-8 border-4 border-t-transparent border-white rounded-full"></div>
+        <span className="ml-3">Loading...</span>
+      </div>
+    );
   }
 
   if (!gallery) {

@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { SelectionManager } from './interactions/SelectionManager';
 import { TransformManager } from './interactions/TransformManager';
+import { supabase } from '@/integrations/supabase/client';
 
 export class ArtworkInteractionManager {
   private selectionManager: SelectionManager;
@@ -63,7 +64,28 @@ export class ArtworkInteractionManager {
     this.transformManager.saveModifiedArtworks();
   }
 
+  async deleteSelectedArtwork(artworkManager: any) {
+    const selectedArtwork = this.selectionManager.getSelectedArtwork();
+    if (!selectedArtwork) return;
+    const id = selectedArtwork.userData.id;
+    try {
+      const { error } = await supabase.from('artworks').delete().eq('id', id);
+      if (!error) {
+        artworkManager.removeArtwork(id);
+        this.selectionManager.clearSelection();
+        console.log('Deleted artwork:', id);
+      }
+    } catch (err) {
+      console.error('Error deleting artwork:', err);
+    }
+  }
+
   cleanup() {
     this.selectionManager.cleanup();
+  }
+
+  isInteracting(): boolean {
+    return this.transformManager.isTransforming() || 
+           (this.editMode && this.selectionManager.hasSelection());
   }
 }

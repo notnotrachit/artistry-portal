@@ -1,25 +1,31 @@
 import * as THREE from 'three';
-import { Bounds, MouseState, CameraState } from './types/CameraTypes';
+import { Bounds } from './types/CameraTypes';
 import { MovementController } from './controls/MovementController';
 import { RotationController } from './controls/RotationController';
+import { KeyboardController } from './controllers/KeyboardController';
 
 export class CameraControls {
+  private keyboardController: KeyboardController;
   private movementController: MovementController;
   private rotationController: RotationController;
-  private mouseState: MouseState = {
-    isLeftMouseDown: false,
-    lastMouseX: 0,
-    lastMouseY: 0
-  };
-  private state: CameraState = {
-    verticalAngle: 0,
-    keyStates: {}
-  };
+  private verticalAngle = 0;
+  private lastMouseX = 0;
+  private lastMouseY = 0;
+  private interactionCheck: () => boolean;
+  private isMouseDown = false;
 
-  constructor(private camera: THREE.PerspectiveCamera, bounds: Bounds) {
+  constructor(
+    private camera: THREE.PerspectiveCamera, 
+    bounds: Bounds,
+    interactionCheck?: () => boolean
+  ) {
+    this.keyboardController = new KeyboardController();
     this.movementController = new MovementController(camera, bounds);
     this.rotationController = new RotationController(camera);
-    this.setupEventListeners();
+    this.interactionCheck = interactionCheck || (() => false);
+
+    this.setupMouseControls();
+    this.keyboardController.enable();
     this.initializeCamera();
   }
 
@@ -29,66 +35,47 @@ export class CameraControls {
     this.camera.lookAt(0, 0, 0);
   }
 
-  private setupEventListeners() {
-    window.addEventListener('keydown', this.handleKeyDown);
-    window.addEventListener('keyup', this.handleKeyUp);
-    window.addEventListener('mousedown', this.handleMouseDown);
-    window.addEventListener('mousemove', this.handleMouseMove);
-    window.addEventListener('mouseup', this.handleMouseUp);
+  private setupMouseControls() {
+    window.addEventListener('mousedown', () => {
+      this.isMouseDown = true;
+    });
+    window.addEventListener('mouseup', () => {
+      this.isMouseDown = false;
+      this.lastMouseX = 0;
+      this.lastMouseY = 0;
+    });
+    window.addEventListener('mousemove', (event) => {
+      if (!this.interactionCheck() && this.isMouseDown) {
+        if (this.lastMouseX === 0 && this.lastMouseY === 0) {
+          this.lastMouseX = event.clientX;
+          this.lastMouseY = event.clientY;
+        }
+        const deltaX = event.clientX - this.lastMouseX;
+        const deltaY = event.clientY - this.lastMouseY;
+        this.verticalAngle = this.rotationController.handleMouseRotation(
+          deltaX,
+          deltaY,
+          this.verticalAngle
+        );
+        this.lastMouseX = event.clientX;
+        this.lastMouseY = event.clientY;
+      }
+    });
+
     window.addEventListener('contextmenu', (e) => e.preventDefault());
   }
 
-  private handleKeyDown = (event: KeyboardEvent) => {
-    this.state.keyStates[event.key.toLowerCase()] = true;
-  };
-
-  private handleKeyUp = (event: KeyboardEvent) => {
-    this.state.keyStates[event.key.toLowerCase()] = false;
-  };
-
-  private handleMouseDown = (event: MouseEvent) => {
-    if (event.button === 0) { // Left mouse button
-      this.mouseState.isLeftMouseDown = true;
-      this.mouseState.lastMouseX = event.clientX;
-      this.mouseState.lastMouseY = event.clientY;
-    }
-  };
-
-  private handleMouseMove = (event: MouseEvent) => {
-    if (this.mouseState.isLeftMouseDown) {
-      const deltaX = event.clientX - this.mouseState.lastMouseX;
-      const deltaY = event.clientY - this.mouseState.lastMouseY;
-
-      this.state.verticalAngle = this.rotationController.handleMouseRotation(
-        deltaX,
-        deltaY,
-        this.state.verticalAngle
+  update() {
+    if (!this.interactionCheck()) {
+      this.movementController.handleMovement(this.keyboardController.keyStates);
+      this.verticalAngle = this.rotationController.handleKeyboardRotation(
+        this.keyboardController.keyStates,
+        this.verticalAngle
       );
-
-      this.mouseState.lastMouseX = event.clientX;
-      this.mouseState.lastMouseY = event.clientY;
     }
-  };
-
-  private handleMouseUp = (event: MouseEvent) => {
-    if (event.button === 0) {
-      this.mouseState.isLeftMouseDown = false;
-    }
-  };
-
-  public update() {
-    this.movementController.handleMovement(this.state.keyStates);
-    this.state.verticalAngle = this.rotationController.handleKeyboardRotation(
-      this.state.keyStates,
-      this.state.verticalAngle
-    );
   }
 
-  public cleanup() {
-    window.removeEventListener('keydown', this.handleKeyDown);
-    window.removeEventListener('keyup', this.handleKeyUp);
-    window.removeEventListener('mousedown', this.handleMouseDown);
-    window.removeEventListener('mousemove', this.handleMouseMove);
-    window.removeEventListener('mouseup', this.handleMouseUp);
+  cleanup() {
+    this.keyboardController.cleanup();
   }
 }

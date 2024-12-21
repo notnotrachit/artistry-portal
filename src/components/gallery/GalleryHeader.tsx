@@ -81,7 +81,7 @@ export const GalleryHeader = ({ title, ownerName, isPublic, onBack, onLogout }: 
                   <li>• Up/Down Arrow Keys: Move camera forward/backward</li>
                   <li>• R Key: Move perspective up</li>
                   <li>• F Key: Move perspective down</li>
-                  <li>• Left Click + Drag: Rotate camera view</li>
+                  <li>• Right Click + Drag: Rotate camera view</li>
                 </ul>
               </div>
             </TooltipContent>

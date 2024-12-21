@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import * as THREE from 'three';
 import { useToast } from '@/components/ui/use-toast';
 import { createScene, createWalls } from '../Scene';
@@ -11,6 +11,7 @@ interface GalleryViewerContainerProps {
   artworks: Array<{
     id: string;
     title: string;
+    description: string;
     image_url: string;
     position: { x: number; y: number; z: number } | null;
     rotation?: { x: number; y: number; z: number } | null;
@@ -26,6 +27,7 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
   const artworkManagerRef = useRef<ArtworkManager | null>(null);
   const artworkInteractionRef = useRef<ArtworkInteractionManager | null>(null);
   const animationFrameRef = useRef<number>();
+  const [remainingArtworks, setRemainingArtworks] = useState(artworks.length);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -50,11 +52,24 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
     containerRef.current.appendChild(renderer.domElement);
 
     // Controls setup
-    cameraControlsRef.current = new CameraControls(camera, bounds);
+    cameraControlsRef.current = new CameraControls(
+      camera, 
+      bounds,
+      () => {
+        try {
+          return artworkInteractionRef.current?.isInteracting?.() || false;
+        } catch (error) {
+          console.error('Error checking interaction state:', error);
+          return false;
+        }
+      }
+    );
 
     // Artwork manager setup
     artworkManagerRef.current = new ArtworkManager(scene);
-    artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork));
+    artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork, () => {
+      setRemainingArtworks((prev) => Math.max(0, prev - 1));
+    }));
 
     // Artwork interaction setup
     artworkInteractionRef.current = new ArtworkInteractionManager(
@@ -95,6 +110,10 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       artworkInteractionRef.current?.handleClick(event, containerRef.current!);
     };
 
+    const handleMouseMove = (event: MouseEvent) => {
+      artworkInteractionRef.current?.handleMouseMove(event, containerRef.current!);
+    };
+
     const handleResize = () => {
       if (!containerRef.current) return;
       
@@ -104,8 +123,8 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
     };
 
     containerRef.current.addEventListener('click', handleClick);
+    containerRef.current.addEventListener('mousemove', handleMouseMove);
     containerRef.current.addEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);
-    window.addEventListener('mousemove', artworkInteractionRef.current.handleMouseMove);
     window.addEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
     window.addEventListener('resize', handleResize);
 
@@ -140,8 +159,8 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       artworkManagerRef.current?.cleanup();
       
       containerRef.current?.removeEventListener('click', handleClick);
+      containerRef.current?.removeEventListener('mousemove', handleMouseMove);
       containerRef.current?.removeEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);
-      window.removeEventListener('mousemove', artworkInteractionRef.current.handleMouseMove);
       window.removeEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
@@ -159,8 +178,15 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
   return (
     <div 
       ref={containerRef} 
-      className="w-full h-[inherit] rounded-lg overflow-hidden"
+      className="w-full h-[inherit] relative"
       style={{ touchAction: 'none' }}
-    />
+    >
+      {remainingArtworks > 0 && (
+        <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-50 text-white">
+          <div className="animate-spin w-8 h-8 border-4 border-t-transparent border-white rounded-full"></div>
+          <span className="ml-3">Loading...</span>
+        </div>
+      )}
+    </div>
   );
 };

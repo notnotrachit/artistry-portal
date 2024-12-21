@@ -11,14 +11,17 @@ export class ArtworkManager {
     this.textureLoader = new THREE.TextureLoader();
   }
 
-  loadArtwork(artwork: {
-    id: string;
-    title: string;
-    image_url: string;
-    position: { x: number; y: number; z: number } | null;
-    rotation?: { x: number; y: number; z: number } | null;
-    scale?: { x: number; y: number } | null;
-  }) {
+  loadArtwork(
+    artwork: {
+      id: string;
+      title: string;
+      image_url: string;
+      position: { x: number; y: number; z: number } | null;
+      rotation?: { x: number; y: number; z: number } | null;
+      scale?: { x: number; y: number } | null;
+    },
+    onLoaded?: () => void
+  ) {
     this.textureLoader.load(
       artwork.image_url,
       (texture) => {
@@ -64,6 +67,7 @@ export class ArtworkManager {
 
         this.scene.add(mesh);
         this.artworks.set(artwork.id, mesh);
+        if (onLoaded) onLoaded(); // Notify container that this artwork has finished loading
       },
       undefined,
       (error) => {
@@ -73,8 +77,23 @@ export class ArtworkManager {
           title: "Error loading artwork",
           description: "Failed to load artwork image"
         });
+        // Still notify so container won't hang indefinitely
+        if (onLoaded) onLoaded();
       }
     );
+  }
+
+  removeArtwork(artworkId: string) {
+    const mesh = this.artworks.get(artworkId);
+    if (!mesh) return;
+    this.scene.remove(mesh);
+    mesh.geometry.dispose();
+    if (mesh.material instanceof THREE.Material) {
+      mesh.material.dispose();
+    } else if (Array.isArray(mesh.material)) {
+      mesh.material.forEach((m) => m.dispose());
+    }
+    this.artworks.delete(artworkId);
   }
 
   cleanup() {

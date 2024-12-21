@@ -2,11 +2,11 @@ import * as THREE from 'three';
 import { SelectionManager } from './SelectionManager';
 
 export class TransformManager {
-  private selectionManager: SelectionManager;
   private isDragging = false;
-  private isRotating = false;
-  private isZMoving = false;
   private isResizing = false;
+  private isRotating = false;
+  private selectionManager: SelectionManager | null = null;
+  private isZMoving = false;
   private activeHandle: THREE.Mesh | null = null;
   private initialMousePosition = new THREE.Vector2();
   private initialScale = new THREE.Vector2();
@@ -79,7 +79,12 @@ export class TransformManager {
       const movementX = event.movementX * 0.01;
       const movementY = event.movementY * 0.01;
 
-      if (this.isRotating) {
+      if (event.ctrlKey) {
+        // Uniform scale (based on Y motion)
+        const scaleDelta = selectedArtwork.scale.x - movementY;
+        const newScale = Math.max(0.1, scaleDelta);
+        selectedArtwork.scale.set(newScale, newScale, 1);
+      } else if (this.isRotating) {
         selectedArtwork.rotation.y += movementX;
         selectedArtwork.rotation.x += movementY;
       } else if (this.isZMoving) {
@@ -153,5 +158,9 @@ export class TransformManager {
       }
     });
     this.modifiedArtworks.clear();
+  }
+
+  isTransforming(): boolean {
+    return this.isDragging || this.isResizing || this.isRotating;
   }
 }
