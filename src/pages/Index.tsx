@@ -20,7 +20,10 @@ const Index = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("galleries")
-        .select("*, owner:owner_id")
+        .select(`
+          *,
+          owner:profiles!galleries_owner_id_fkey(username, full_name)
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
