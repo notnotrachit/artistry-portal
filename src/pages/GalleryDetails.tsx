@@ -7,6 +7,29 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import GalleryViewer3D from "@/components/GalleryViewer3D";
 import { ArrowLeft, Share2, Eye, EyeOff } from "lucide-react";
+import { Database } from "@/integrations/supabase/types";
+
+type Artwork = Database['public']['Tables']['artworks']['Row'];
+
+// Helper function to transform the position and rotation data
+const transformArtworkData = (artwork: Artwork) => {
+  const defaultPosition = { x: 0, y: 0, z: 0 };
+  const defaultRotation = { x: 0, y: 0, z: 0 };
+
+  return {
+    id: artwork.id,
+    title: artwork.title,
+    image_url: artwork.image_url,
+    position: artwork.position ? 
+      (typeof artwork.position === 'string' ? 
+        JSON.parse(artwork.position) : artwork.position) as { x: number; y: number; z: number } : 
+      defaultPosition,
+    rotation: artwork.rotation ? 
+      (typeof artwork.rotation === 'string' ? 
+        JSON.parse(artwork.rotation) : artwork.rotation) as { x: number; y: number; z: number } : 
+      defaultRotation
+  };
+};
 
 const GalleryDetails = () => {
   const { id } = useParams();
@@ -45,7 +68,7 @@ const GalleryDetails = () => {
         .order("created_at", { ascending: true });
 
       if (error) throw error;
-      return data;
+      return data?.map(transformArtworkData) || [];
     },
   });
 
