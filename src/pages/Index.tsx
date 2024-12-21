@@ -9,17 +9,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { CreateGalleryDialog } from "@/components/gallery/CreateGalleryDialog";
 import { GalleryList } from "@/components/gallery/GalleryList";
-import { SelectedGalleryView } from "@/components/gallery/SelectedGalleryView";
-
-interface Position {
-  x: number;
-  y: number;
-  z: number;
-}
 
 const Index = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [selectedGallery, setSelectedGallery] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -36,55 +28,6 @@ const Index = () => {
     },
   });
 
-  const { data: artworks, isLoading: artworksLoading } = useQuery({
-    queryKey: ["artworks", selectedGallery],
-    enabled: !!selectedGallery,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("artworks")
-        .select("*")
-        .eq("gallery_id", selectedGallery)
-        .order("created_at", { ascending: true });
-
-      if (error) throw error;
-
-      return data.map(artwork => {
-        let position: Position | null = null;
-        let rotation: { x: number; y: number; z: number } | null = null;
-
-        if (artwork.position && typeof artwork.position === 'object') {
-          const pos = artwork.position as Record<string, number>;
-          if ('x' in pos && 'y' in pos && 'z' in pos) {
-            position = {
-              x: Number(pos.x),
-              y: Number(pos.y),
-              z: Number(pos.z)
-            };
-          }
-        }
-
-        if (artwork.rotation && typeof artwork.rotation === 'object') {
-          const rot = artwork.rotation as Record<string, number>;
-          if ('x' in rot && 'y' in rot && 'z' in rot) {
-            rotation = {
-              x: Number(rot.x),
-              y: Number(rot.y),
-              z: Number(rot.z)
-            };
-          }
-        }
-
-        return {
-          id: artwork.id,
-          title: artwork.title,
-          image_url: artwork.image_url,
-          position,
-          rotation
-        };
-      });
-    },
-  });
-
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -93,9 +36,6 @@ const Index = () => {
       navigate("/login");
     }
   };
-
-  const isLoading = galleriesLoading || (selectedGallery && artworksLoading);
-  const selectedGalleryData = galleries?.find(g => g.id === selectedGallery);
 
   return (
     <div className="min-h-screen bg-gallery-50">
@@ -117,21 +57,11 @@ const Index = () => {
           </DialogContent>
         </Dialog>
 
-        {selectedGallery && artworks && selectedGalleryData ? (
-          <SelectedGalleryView
-            galleryId={selectedGallery}
-            galleryTitle={selectedGalleryData.title}
-            galleryOwnerId={selectedGalleryData.owner_id}
-            artworks={artworks}
-            onBack={() => setSelectedGallery(null)}
-          />
-        ) : (
-          <GalleryList
-            galleries={galleries || []}
-            onSelectGallery={setSelectedGallery}
-            isLoading={isLoading}
-          />
-        )}
+        <GalleryList
+          galleries={galleries || []}
+          onSelectGallery={(id) => navigate(`/gallery/${id}`)}
+          isLoading={galleriesLoading}
+        />
       </div>
     </div>
   );
