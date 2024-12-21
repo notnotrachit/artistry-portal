@@ -18,6 +18,7 @@ export type Database = {
           image_url: string
           position: Json | null
           rotation: Json | null
+          scale: Json | null
           title: string
           updated_at: string
         }
@@ -29,6 +30,7 @@ export type Database = {
           image_url: string
           position?: Json | null
           rotation?: Json | null
+          scale?: Json | null
           title: string
           updated_at?: string
         }
@@ -40,6 +42,7 @@ export type Database = {
           image_url?: string
           position?: Json | null
           rotation?: Json | null
+          scale?: Json | null
           title?: string
           updated_at?: string
         }

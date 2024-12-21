@@ -9,6 +9,7 @@ export class TransformManager {
   private isResizing = false;
   private activeHandle: THREE.Mesh | null = null;
   private initialAspectRatio = 1;
+  private initialScale = new THREE.Vector2(1, 1);
 
   constructor(
     private onUpdateArtwork: (
@@ -43,6 +44,7 @@ export class TransformManager {
         this.isResizing = true;
         this.activeHandle = object;
         this.initialAspectRatio = selectedArtwork.scale.x / selectedArtwork.scale.y;
+        this.initialScale.set(selectedArtwork.scale.x, selectedArtwork.scale.y);
       } else if (selectedArtwork) {
         this.isDragging = true;
         this.isRotating = event.shiftKey;
@@ -60,12 +62,14 @@ export class TransformManager {
 
     if (this.isResizing && this.activeHandle) {
       const handleIndex = this.activeHandle.userData.handleIndex;
-      const baseScale = Math.max(0.1, selectedArtwork.scale.x + (handleIndex % 2 === 0 ? -movementX : movementX));
+      const scaleMultiplier = handleIndex % 2 === 0 ? -1 : 1;
+      const scaleDelta = (movementX * scaleMultiplier);
       
-      // Maintain aspect ratio
-      selectedArtwork.scale.x = baseScale;
-      selectedArtwork.scale.y = baseScale / this.initialAspectRatio;
+      // Calculate new scale while preserving aspect ratio
+      const newScaleX = Math.max(0.1, this.initialScale.x + scaleDelta);
+      const newScaleY = newScaleX / this.initialAspectRatio;
       
+      selectedArtwork.scale.set(newScaleX, newScaleY, 1);
       this.selectionManager.getResizeHandles().updateAllHandlePositions(selectedArtwork);
       this.notifyUpdate(selectedArtwork);
     } else if (this.isDragging) {
