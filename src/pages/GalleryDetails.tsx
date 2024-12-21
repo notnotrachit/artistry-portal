@@ -46,8 +46,8 @@ const ControlsDialog = ({ open, onClose }: { open: boolean; onClose: () => void 
           <li>• Up/Down Arrow Keys: Move camera forward/backward</li>
           <li>• R Key: Move perspective up</li>
           <li>• F Key: Move perspective down</li>
-          <li>• Q Key: Lower camera height</li>
-          <li>• E Key: Raise camera height</li>
+          <li>• Page Up: Raise camera height</li>
+          <li>• Page Down: Lower camera height</li>
           <li>• Left Click + Drag: Rotate camera view</li>
         </ul>
       </div>

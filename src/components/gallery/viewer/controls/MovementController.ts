@@ -29,11 +29,11 @@ export class MovementController {
       newPosition.sub(sideDirection.multiplyScalar(this.moveSpeed));
     }
     
-    // Vertical movement
-    if (keyStates['q']) {
+    // Vertical movement using PageUp and PageDown
+    if (keyStates['pagedown']) {
       newPosition.y -= this.moveSpeed;
     }
-    if (keyStates['e']) {
+    if (keyStates['pageup']) {
       newPosition.y += this.moveSpeed;
     }
 
