@@ -76,13 +76,13 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
           
           toast({
             title: "Success",
-            description: "Artwork position, rotation and scale saved",
+            description: "Artwork transformations saved",
           });
         } catch (error) {
           console.error('Error updating artwork:', error);
           toast({
             title: "Error",
-            description: "Failed to save artwork position, rotation and scale",
+            description: "Failed to save artwork transformations",
             variant: "destructive"
           });
         }
@@ -134,6 +134,9 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       window.removeEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
+      if (artworkInteractionRef.current) {
+        artworkInteractionRef.current.saveModifiedArtworks();
+      }
     };
   }, [artworks, isOwner, toast]);
 

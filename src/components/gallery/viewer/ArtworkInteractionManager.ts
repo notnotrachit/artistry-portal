@@ -53,7 +53,12 @@ export class ArtworkInteractionManager {
     this.editMode = mode;
     if (!mode) {
       this.selectionManager.clearSelection();
+      this.transformManager.saveModifiedArtworks();
     }
+  }
+
+  saveModifiedArtworks() {
+    this.transformManager.saveModifiedArtworks();
   }
 
   cleanup() {

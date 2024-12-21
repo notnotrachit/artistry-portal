@@ -27,9 +27,15 @@ const transformArtworkData = (artwork: Artwork) => {
     rotation: artwork.rotation ? 
       (typeof artwork.rotation === 'string' ? 
         JSON.parse(artwork.rotation) : artwork.rotation) as { x: number; y: number; z: number } : 
-      defaultRotation
+      defaultRotation,
+    scale: artwork.scale ?
+      (typeof artwork.scale === 'string' ?
+        JSON.parse(artwork.scale) : artwork.scale) as { x: number; y: number }
+      : { x: 1, y: 1 }
   };
 };
+
+// ... keep existing code (gallery and artworks queries)
 
 const GalleryDetails = () => {
   const { id } = useParams();
@@ -100,23 +106,35 @@ const GalleryDetails = () => {
 
   const isOwner = session?.user?.id === gallery.owner_id;
 
+  const handleExitGallery = () => {
+    setIsFullscreen(false);
+    setIsEditing(false);
+  };
+
+  const handleExitEditMode = () => {
+    setIsEditing(false);
+  };
+
   if (isFullscreen) {
     return (
       <div className="fixed inset-0 bg-black w-screen h-screen">
         <div className="absolute top-4 left-4 z-10 flex gap-2">
           <Button
             variant="outline"
-            onClick={() => {
-              setIsFullscreen(false);
-              setIsEditing(false);
-            }}
+            onClick={handleExitGallery}
           >
             Exit Gallery
           </Button>
           {isOwner && (
             <Button
               variant={isEditing ? "destructive" : "outline"}
-              onClick={() => setIsEditing(!isEditing)}
+              onClick={() => {
+                if (isEditing) {
+                  handleExitEditMode();
+                } else {
+                  setIsEditing(true);
+                }
+              }}
             >
               {isEditing ? "Exit Edit Mode" : "Edit Gallery"}
             </Button>

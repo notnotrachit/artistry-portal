@@ -10,6 +10,7 @@ export class TransformManager {
   private activeHandle: THREE.Mesh | null = null;
   private initialAspectRatio = 1;
   private initialScale = new THREE.Vector2(1, 1);
+  private modifiedArtworks: Set<string> = new Set();
 
   constructor(
     private onUpdateArtwork: (
@@ -71,7 +72,7 @@ export class TransformManager {
       
       selectedArtwork.scale.set(newScaleX, newScaleY, 1);
       this.selectionManager.getResizeHandles().updateAllHandlePositions(selectedArtwork);
-      this.notifyUpdate(selectedArtwork);
+      this.markArtworkAsModified(selectedArtwork);
     } else if (this.isDragging) {
       if (this.isRotating) {
         selectedArtwork.rotation.y += movementX;
@@ -83,7 +84,7 @@ export class TransformManager {
         selectedArtwork.position.y -= movementY;
       }
       this.selectionManager.getResizeHandles().updateAllHandlePositions(selectedArtwork);
-      this.notifyUpdate(selectedArtwork);
+      this.markArtworkAsModified(selectedArtwork);
     }
   }
 
@@ -95,25 +96,39 @@ export class TransformManager {
     this.activeHandle = null;
   }
 
-  private notifyUpdate(mesh: THREE.Mesh) {
+  private markArtworkAsModified(mesh: THREE.Mesh) {
     if (mesh.userData.id) {
-      this.onUpdateArtwork(
-        mesh.userData.id,
-        {
-          x: Number(mesh.position.x.toFixed(3)),
-          y: Number(mesh.position.y.toFixed(3)),
-          z: Number(mesh.position.z.toFixed(3))
-        },
-        {
-          x: Number((mesh.rotation.x * 180 / Math.PI).toFixed(3)),
-          y: Number((mesh.rotation.y * 180 / Math.PI).toFixed(3)),
-          z: Number((mesh.rotation.z * 180 / Math.PI).toFixed(3))
-        },
-        {
-          x: Number(mesh.scale.x.toFixed(3)),
-          y: Number(mesh.scale.y.toFixed(3))
-        }
-      );
+      this.modifiedArtworks.add(mesh.userData.id);
     }
+  }
+
+  saveModifiedArtworks() {
+    const scene = this.selectionManager['scene'];
+    this.modifiedArtworks.forEach(id => {
+      const mesh = scene.children.find(
+        child => child instanceof THREE.Mesh && child.userData.id === id
+      ) as THREE.Mesh;
+      
+      if (mesh) {
+        this.onUpdateArtwork(
+          mesh.userData.id,
+          {
+            x: Number(mesh.position.x.toFixed(3)),
+            y: Number(mesh.position.y.toFixed(3)),
+            z: Number(mesh.position.z.toFixed(3))
+          },
+          {
+            x: Number((mesh.rotation.x * 180 / Math.PI).toFixed(3)),
+            y: Number((mesh.rotation.y * 180 / Math.PI).toFixed(3)),
+            z: Number((mesh.rotation.z * 180 / Math.PI).toFixed(3))
+          },
+          {
+            x: Number(mesh.scale.x.toFixed(3)),
+            y: Number(mesh.scale.y.toFixed(3))
+          }
+        );
+      }
+    });
+    this.modifiedArtworks.clear();
   }
 }
