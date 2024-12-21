@@ -52,12 +52,14 @@ export class ArtworkInteractionManager {
   setEditMode(mode: boolean) {
     this.editMode = mode;
     if (!mode) {
+      console.log('Exiting edit mode, saving all modifications...');
       this.selectionManager.clearSelection();
       this.transformManager.saveModifiedArtworks();
     }
   }
 
   saveModifiedArtworks() {
+    console.log('Saving modified artworks...');
     this.transformManager.saveModifiedArtworks();
   }
 

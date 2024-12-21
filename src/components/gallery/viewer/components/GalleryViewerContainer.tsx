@@ -63,6 +63,7 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       isOwner,
       async (id, position, rotation, scale) => {
         try {
+          console.log('Updating artwork:', { id, position, rotation, scale });
           const { error } = await supabase
             .from('artworks')
             .update({ 
@@ -117,6 +118,9 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
     };
     window.addEventListener('resize', handleResize);
 
+    // Update interaction manager when isOwner changes
+    artworkInteractionRef.current.setEditMode(isOwner);
+
     // Cleanup
     return () => {
       if (containerRef.current?.contains(renderer.domElement)) {
@@ -127,18 +131,30 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       }
       cameraControlsRef.current?.cleanup();
       artworkManagerRef.current?.cleanup();
-      artworkInteractionRef.current?.cleanup();
+      
+      // Save any pending changes before cleanup
+      if (artworkInteractionRef.current) {
+        console.log('Component unmounting, saving final changes...');
+        artworkInteractionRef.current.saveModifiedArtworks();
+        artworkInteractionRef.current.cleanup();
+      }
+      
       containerRef.current?.removeEventListener('click', handleClick);
       containerRef.current?.removeEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);
       window.removeEventListener('mousemove', artworkInteractionRef.current.handleMouseMove);
       window.removeEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
       window.removeEventListener('resize', handleResize);
       renderer.dispose();
-      if (artworkInteractionRef.current) {
-        artworkInteractionRef.current.saveModifiedArtworks();
-      }
     };
   }, [artworks, isOwner, toast]);
+
+  // Update edit mode when isOwner changes
+  useEffect(() => {
+    if (artworkInteractionRef.current) {
+      console.log('Edit mode changed:', isOwner);
+      artworkInteractionRef.current.setEditMode(isOwner);
+    }
+  }, [isOwner]);
 
   return (
     <div 
