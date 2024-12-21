@@ -7,7 +7,7 @@ export class CameraControls {
   private movementController: MovementController;
   private rotationController: RotationController;
   private mouseState: MouseState = {
-    isRightMouseDown: false,
+    isLeftMouseDown: false,
     lastMouseX: 0,
     lastMouseY: 0
   };
@@ -20,6 +20,13 @@ export class CameraControls {
     this.movementController = new MovementController(camera, bounds);
     this.rotationController = new RotationController(camera);
     this.setupEventListeners();
+    this.initializeCamera();
+  }
+
+  private initializeCamera() {
+    // Position camera at the start of the room
+    this.camera.position.set(0, 0, 28); // Near the back wall
+    this.camera.lookAt(0, 0, 0);
   }
 
   private setupEventListeners() {
@@ -40,15 +47,15 @@ export class CameraControls {
   };
 
   private handleMouseDown = (event: MouseEvent) => {
-    if (event.button === 2) { // Right mouse button
-      this.mouseState.isRightMouseDown = true;
+    if (event.button === 0) { // Left mouse button
+      this.mouseState.isLeftMouseDown = true;
       this.mouseState.lastMouseX = event.clientX;
       this.mouseState.lastMouseY = event.clientY;
     }
   };
 
   private handleMouseMove = (event: MouseEvent) => {
-    if (this.mouseState.isRightMouseDown) {
+    if (this.mouseState.isLeftMouseDown) {
       const deltaX = event.clientX - this.mouseState.lastMouseX;
       const deltaY = event.clientY - this.mouseState.lastMouseY;
 
@@ -64,8 +71,8 @@ export class CameraControls {
   };
 
   private handleMouseUp = (event: MouseEvent) => {
-    if (event.button === 2) {
-      this.mouseState.isRightMouseDown = false;
+    if (event.button === 0) {
+      this.mouseState.isLeftMouseDown = false;
     }
   };
 

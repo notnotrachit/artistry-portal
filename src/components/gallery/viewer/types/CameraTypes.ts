@@ -8,7 +8,7 @@ export interface Bounds {
 }
 
 export interface MouseState {
-  isRightMouseDown: boolean;
+  isLeftMouseDown: boolean;
   lastMouseX: number;
   lastMouseY: number;
 }

@@ -21,10 +21,10 @@ export class MovementController {
     if (keyStates['s'] || keyStates['arrowdown']) {
       newPosition.sub(direction.multiplyScalar(this.moveSpeed));
     }
-    if (keyStates['a'] || keyStates['arrowleft']) {
+    if (keyStates['d'] || keyStates['arrowright']) {
       newPosition.add(sideDirection.multiplyScalar(this.moveSpeed));
     }
-    if (keyStates['d'] || keyStates['arrowright']) {
+    if (keyStates['a'] || keyStates['arrowleft']) {
       newPosition.sub(sideDirection.multiplyScalar(this.moveSpeed));
     }
 

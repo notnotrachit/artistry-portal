@@ -29,9 +29,9 @@ export class RotationController {
       this.camera.lookAt(lookAtPoint);
     }
 
-    // Vertical rotation (R/F keys)
-    if (keyStates['r'] || keyStates['f']) {
-      const verticalRotation = (keyStates['r'] ? -1 : 1) * this.rotationSpeed;
+    // Vertical rotation (R/F keys) - Reversed the direction
+    if (keyStates['f'] || keyStates['r']) {
+      const verticalRotation = (keyStates['f'] ? -1 : 1) * this.rotationSpeed;
       newVerticalAngle = this.calculateNewVerticalAngle(verticalAngle, verticalRotation);
       this.applyVerticalRotation(newVerticalAngle);
     }
