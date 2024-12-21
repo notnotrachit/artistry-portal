@@ -3,6 +3,7 @@ import { Bounds, CameraState } from '../types/CameraTypes';
 
 export class MovementController {
   private moveSpeed = 0.1;
+  private verticalBounds = { min: 0.5, max: 5 }; // Limit vertical movement
 
   constructor(private camera: THREE.PerspectiveCamera, private bounds: Bounds) {}
 
@@ -27,10 +28,19 @@ export class MovementController {
     if (keyStates['a'] || keyStates['arrowleft']) {
       newPosition.sub(sideDirection.multiplyScalar(this.moveSpeed));
     }
+    
+    // Vertical movement
+    if (keyStates['q']) {
+      newPosition.y -= this.moveSpeed;
+    }
+    if (keyStates['e']) {
+      newPosition.y += this.moveSpeed;
+    }
 
     // Apply bounds
     newPosition.x = Math.max(this.bounds.minX, Math.min(this.bounds.maxX, newPosition.x));
     newPosition.z = Math.max(this.bounds.minZ, Math.min(this.bounds.maxZ, newPosition.z));
+    newPosition.y = Math.max(this.verticalBounds.min, Math.min(this.verticalBounds.max, newPosition.y));
 
     this.camera.position.copy(newPosition);
   }
