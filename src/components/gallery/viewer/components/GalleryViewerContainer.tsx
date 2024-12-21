@@ -53,7 +53,7 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
     cameraControlsRef.current = new CameraControls(camera, bounds);
 
     // Artwork manager setup
-    artworkManagerRef.current = new ArtworkManager(scene, toast);
+    artworkManagerRef.current = new ArtworkManager(scene);
     artworks.forEach(artwork => artworkManagerRef.current?.loadArtwork(artwork));
 
     // Artwork interaction setup
