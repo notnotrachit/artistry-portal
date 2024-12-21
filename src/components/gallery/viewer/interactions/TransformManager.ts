@@ -47,7 +47,6 @@ export class TransformManager {
         this.activeHandle = object;
         this.initialMousePosition.set(event.clientX, event.clientY);
         this.initialScale.copy(selectedArtwork.scale);
-        this.initialArtworkPosition.copy(selectedArtwork.position);
       } else if (selectedArtwork) {
         this.isDragging = true;
         this.isRotating = event.shiftKey;
@@ -63,17 +62,15 @@ export class TransformManager {
     if (this.isResizing && this.activeHandle) {
       const deltaX = (event.clientX - this.initialMousePosition.x) * 0.01;
       
-      // Calculate new scale while maintaining aspect ratio
-      const geometry = selectedArtwork.geometry as THREE.PlaneGeometry;
-      const aspectRatio = geometry.parameters.height / geometry.parameters.width;
+      // Get the handle's position relative to the artwork center
+      const handleIndex = this.activeHandle.userData.handleIndex;
+      const scaleMultiplier = handleIndex % 2 === 0 ? -1 : 1;
       
-      // Base scale change on handle position and movement
-      const scaleMultiplier = this.activeHandle.userData.handleIndex % 2 === 0 ? -1 : 1;
-      const newScaleX = Math.max(0.1, this.initialScale.x + deltaX * scaleMultiplier);
-      const newScaleY = newScaleX * aspectRatio;
+      // Calculate uniform scale factor
+      const scaleFactor = Math.max(0.1, this.initialScale.x + deltaX * scaleMultiplier);
       
-      // Apply uniform scaling
-      selectedArtwork.scale.set(newScaleX, newScaleY, 1);
+      // Apply uniform scaling to maintain aspect ratio
+      selectedArtwork.scale.set(scaleFactor, scaleFactor, 1);
       
       // Update handle positions
       this.selectionManager.getResizeHandles().updateAllHandlePositions(selectedArtwork);
