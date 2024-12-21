@@ -143,7 +143,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
   }, [editMode]);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 h-full">
       {isOwner && (
         <div className="space-y-2">
           <Button 
@@ -165,7 +165,7 @@ const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) =>
       )}
       <div 
         ref={containerRef} 
-        className="w-full h-[600px] rounded-lg overflow-hidden"
+        className="w-full h-[inherit] rounded-lg overflow-hidden"
         style={{ touchAction: 'none' }}
       />
     </div>
