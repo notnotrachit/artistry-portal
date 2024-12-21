@@ -1,14 +1,19 @@
-import React from 'react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 export const GalleryInstructions = () => {
   return (
-    <p className="text-sm text-muted-foreground mb-2">
-      Click to select an artwork. Drag to move in X-Y plane.
-      Hold Alt + drag to move closer/further (Z-axis).
-      Hold Shift + drag to rotate.
-      Hold S + drag to scale.
-      Use WASD or arrow keys to move around. Hold right mouse button and move to look around.
-      Use R/F keys to look up/down.
-    </p>
+    <Alert className="mb-4">
+      <Info className="h-4 w-4" />
+      <AlertDescription>
+        Click an artwork to select it. Then:
+        <ul className="list-disc pl-6 mt-2 space-y-1">
+          <li>Click and drag to move artwork</li>
+          <li>Hold Shift + drag to rotate</li>
+          <li>Hold Alt + drag to move in/out</li>
+          <li>Hold R + drag up/down to resize</li>
+        </ul>
+      </AlertDescription>
+    </Alert>
   );
 };
