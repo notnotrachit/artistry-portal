@@ -7,6 +7,8 @@ import { SessionContextProvider } from "@supabase/auth-helpers-react";
 import { useState, useEffect } from "react";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import Landing from "./pages/Landing";
+import Explore from "./pages/Explore";
 import GalleryDetails from "./pages/GalleryDetails";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -46,9 +48,11 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/" element={<Landing />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/explore" element={<Explore />} />
             <Route
-              path="/"
+              path="/dashboard"
               element={
                 <ProtectedRoute>
                   <Index />
@@ -57,9 +61,7 @@ const App = () => (
             />
             <Route
               path="/gallery/:id"
-              element={
-                <GalleryDetails />
-              }
+              element={<GalleryDetails />}
             />
           </Routes>
         </BrowserRouter>

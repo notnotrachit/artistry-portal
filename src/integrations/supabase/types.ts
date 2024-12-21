@@ -62,33 +62,39 @@ export type Database = {
           description: string | null
           id: string
           is_public: boolean | null
+          like_count: number | null
           owner_id: string
           settings: Json | null
           template: string
           title: string
           updated_at: string
+          view_count: number | null
         }
         Insert: {
           created_at?: string
           description?: string | null
           id?: string
           is_public?: boolean | null
+          like_count?: number | null
           owner_id: string
           settings?: Json | null
           template: string
           title: string
           updated_at?: string
+          view_count?: number | null
         }
         Update: {
           created_at?: string
           description?: string | null
           id?: string
           is_public?: boolean | null
+          like_count?: number | null
           owner_id?: string
           settings?: Json | null
           template?: string
           title?: string
           updated_at?: string
+          view_count?: number | null
         }
         Relationships: [
           {
