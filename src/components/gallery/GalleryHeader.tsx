@@ -1,7 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Share2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Share2, Eye, EyeOff, HelpCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface GalleryHeaderProps {
   title?: string;
@@ -46,7 +52,7 @@ export const GalleryHeader = ({ title, ownerName, isPublic, onBack, onLogout }: 
           </div>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 items-center">
         {typeof isPublic !== 'undefined' && (
           <Badge variant="secondary">
             {isPublic ? (
@@ -60,6 +66,27 @@ export const GalleryHeader = ({ title, ownerName, isPublic, onBack, onLogout }: 
             )}
           </Badge>
         )}
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="icon">
+                <HelpCircle className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom" align="end" className="max-w-sm">
+              <div className="space-y-2">
+                <p className="font-semibold">Gallery Controls:</p>
+                <ul className="text-sm space-y-1">
+                  <li>• Left/Right Arrow Keys: Move camera left/right</li>
+                  <li>• Up/Down Arrow Keys: Move camera forward/backward</li>
+                  <li>• R Key: Move perspective up</li>
+                  <li>• F Key: Move perspective down</li>
+                  <li>• Left Click + Drag: Rotate camera view</li>
+                </ul>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <Button variant="outline" onClick={handleShare}>
           <Share2 className="w-4 h-4 mr-2" />
           Share
