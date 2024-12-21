@@ -6,6 +6,7 @@ export const useThreeJsScene = (containerRef: React.RefObject<HTMLDivElement>) =
   const sceneRef = useRef<THREE.Scene>();
   const cameraRef = useRef<THREE.PerspectiveCamera>();
   const rendererRef = useRef<THREE.WebGLRenderer>();
+  const boundsRef = useRef<any>();
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -14,6 +15,7 @@ export const useThreeJsScene = (containerRef: React.RefObject<HTMLDivElement>) =
     const scene = createScene();
     const { bounds } = createWalls(scene);
     sceneRef.current = scene;
+    boundsRef.current = bounds;
 
     // Camera setup
     const camera = new THREE.PerspectiveCamera(
@@ -44,6 +46,6 @@ export const useThreeJsScene = (containerRef: React.RefObject<HTMLDivElement>) =
     scene: sceneRef.current,
     camera: cameraRef.current,
     renderer: rendererRef.current,
-    bounds: sceneRef.current ? createWalls(sceneRef.current).bounds : undefined
+    bounds: boundsRef.current
   };
 };

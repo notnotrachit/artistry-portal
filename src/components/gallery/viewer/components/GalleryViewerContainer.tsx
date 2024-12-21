@@ -21,16 +21,16 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
   const animationFrameRef = useRef<number>();
 
   // Initialize Three.js scene
-  const { scene, camera, renderer } = useThreeJsScene(containerRef);
+  const { scene, camera, renderer, bounds } = useThreeJsScene(containerRef);
 
   // Initialize artwork transformations with all required arguments
   const { artworkInteraction } = useArtworkTransforms(scene, camera, artworks, isOwner);
 
   useEffect(() => {
-    if (!scene || !camera || !renderer) return;
+    if (!scene || !camera || !renderer || !bounds) return;
 
-    // Controls setup
-    cameraControlsRef.current = new CameraControls(camera);
+    // Controls setup with proper bounds
+    cameraControlsRef.current = new CameraControls(camera, bounds);
 
     // Event listeners
     const handleClick = (event: MouseEvent) => {
@@ -51,9 +51,14 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
     window.addEventListener('mouseup', artworkInteraction?.handleMouseUp);
     window.addEventListener('resize', handleResize);
 
+    // Initial resize
+    handleResize();
+
     // Animation loop
     const animate = () => {
-      cameraControlsRef.current?.update();
+      if (cameraControlsRef.current) {
+        cameraControlsRef.current.update();
+      }
       renderer.render(scene, camera);
       animationFrameRef.current = requestAnimationFrame(animate);
     };
@@ -71,7 +76,7 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       window.removeEventListener('mouseup', artworkInteraction?.handleMouseUp);
       window.removeEventListener('resize', handleResize);
     };
-  }, [scene, camera, renderer, artworkInteraction]);
+  }, [scene, camera, renderer, bounds, artworkInteraction]);
 
   return (
     <div 
