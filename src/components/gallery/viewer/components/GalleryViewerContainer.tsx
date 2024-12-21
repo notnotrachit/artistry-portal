@@ -95,10 +95,19 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       artworkInteractionRef.current?.handleClick(event, containerRef.current!);
     };
 
+    const handleResize = () => {
+      if (!containerRef.current) return;
+      
+      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    };
+
     containerRef.current.addEventListener('click', handleClick);
     containerRef.current.addEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);
     window.addEventListener('mousemove', artworkInteractionRef.current.handleMouseMove);
     window.addEventListener('mouseup', artworkInteractionRef.current.handleMouseUp);
+    window.addEventListener('resize', handleResize);
 
     // Animation loop
     const animate = () => {
@@ -107,16 +116,6 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       animationFrameRef.current = requestAnimationFrame(animate);
     };
     animate();
-
-    // Window resize handler
-    const handleResize = () => {
-      if (!containerRef.current) return;
-      
-      camera.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
-    };
-    window.addEventListener('resize', handleResize);
 
     // Update interaction manager when isOwner changes
     artworkInteractionRef.current.setEditMode(isOwner);
@@ -129,8 +128,6 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      cameraControlsRef.current?.cleanup();
-      artworkManagerRef.current?.cleanup();
       
       // Save any pending changes before cleanup
       if (artworkInteractionRef.current) {
@@ -138,6 +135,9 @@ export const GalleryViewerContainer = ({ artworks, isOwner }: GalleryViewerConta
         artworkInteractionRef.current.saveModifiedArtworks();
         artworkInteractionRef.current.cleanup();
       }
+      
+      cameraControlsRef.current?.cleanup();
+      artworkManagerRef.current?.cleanup();
       
       containerRef.current?.removeEventListener('click', handleClick);
       containerRef.current?.removeEventListener('mousedown', artworkInteractionRef.current.handleMouseDown);

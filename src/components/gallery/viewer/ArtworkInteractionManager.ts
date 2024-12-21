@@ -54,7 +54,7 @@ export class ArtworkInteractionManager {
     if (!mode) {
       console.log('Exiting edit mode, saving all modifications...');
       this.selectionManager.clearSelection();
-      this.transformManager.saveModifiedArtworks();
+      this.saveModifiedArtworks();
     }
   }
 
