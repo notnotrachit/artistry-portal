@@ -28,6 +28,13 @@ export class ArtworkInteractionManager {
     this.handleMouseDown = this.handleMouseDown.bind(this);
     this.handleMouseMove = this.handleMouseMove.bind(this);
     this.handleMouseUp = this.handleMouseUp.bind(this);
+    this.handleKeyDown = this.handleKeyDown.bind(this);
+    this.handleKeyUp = this.handleKeyUp.bind(this);
+
+    if (editMode) {
+      window.addEventListener('keydown', this.handleKeyDown);
+      window.addEventListener('keyup', this.handleKeyUp);
+    }
   }
 
   setEditMode(mode: boolean) {
@@ -35,6 +42,27 @@ export class ArtworkInteractionManager {
     if (!mode && this.selectedArtwork) {
       this.saveArtworkTransform();
       this.selectedArtwork = null;
+    }
+
+    if (mode) {
+      window.addEventListener('keydown', this.handleKeyDown);
+      window.addEventListener('keyup', this.handleKeyUp);
+    } else {
+      window.removeEventListener('keydown', this.handleKeyDown);
+      window.removeEventListener('keyup', this.handleKeyUp);
+    }
+  }
+
+  private handleKeyDown(event: KeyboardEvent) {
+    if (!this.selectedArtwork || !this.isDragging) return;
+    if (event.key.toLowerCase() === 's') {
+      this.isScaling = true;
+    }
+  }
+
+  private handleKeyUp(event: KeyboardEvent) {
+    if (event.key.toLowerCase() === 's') {
+      this.isScaling = false;
     }
   }
 
@@ -89,7 +117,6 @@ export class ArtworkInteractionManager {
     this.isDragging = true;
     this.isRotating = event.shiftKey;
     this.isZMoving = event.altKey;
-    this.isScaling = event.key === 's' || event.key === 'S';
   }
 
   handleMouseMove(event: MouseEvent) {
@@ -128,6 +155,8 @@ export class ArtworkInteractionManager {
   }
 
   cleanup() {
+    window.removeEventListener('keydown', this.handleKeyDown);
+    window.removeEventListener('keyup', this.handleKeyUp);
     this.selectedArtwork = null;
     this.isDragging = false;
     this.isRotating = false;
