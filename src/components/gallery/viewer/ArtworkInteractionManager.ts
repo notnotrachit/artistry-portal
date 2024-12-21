@@ -47,6 +47,8 @@ export class ArtworkInteractionManager {
   handleMouseUp() {
     if (!this.editMode) return;
     this.transformManager.handleMouseUp();
+    // Save modifications after mouse up to ensure we capture all changes
+    this.saveModifiedArtworks();
   }
 
   setEditMode(mode: boolean) {
@@ -54,7 +56,7 @@ export class ArtworkInteractionManager {
     if (!mode) {
       console.log('Exiting edit mode, saving all modifications...');
       this.selectionManager.clearSelection();
-      this.transformManager.saveModifiedArtworks();
+      this.saveModifiedArtworks();
     }
   }
 
@@ -65,5 +67,7 @@ export class ArtworkInteractionManager {
 
   cleanup() {
     this.selectionManager.cleanup();
+    // Ensure we save any pending changes before cleanup
+    this.saveModifiedArtworks();
   }
 }
