@@ -1,12 +1,13 @@
 import * as THREE from 'three';
-import { type ToastActionElement, type ToastProps } from '@/components/ui/toast';
+import { type ToastActionElement } from '@/components/ui/toast';
+import { toast } from '@/hooks/use-toast';
 
 export class ArtworkManager {
   private artworks: Map<string, THREE.Mesh> = new Map();
   private textureLoader: THREE.TextureLoader;
   private readonly DEG_TO_RAD = Math.PI / 180;
 
-  constructor(private scene: THREE.Scene, private toast: (props: ToastProps) => void) {
+  constructor(private scene: THREE.Scene) {
     this.textureLoader = new THREE.TextureLoader();
   }
 
@@ -67,9 +68,9 @@ export class ArtworkManager {
       undefined,
       (error) => {
         console.error('Error loading artwork texture:', error);
-        this.toast({
+        toast({
           variant: "destructive",
-          title: "Error",
+          title: "Error loading artwork",
           description: "Failed to load artwork image"
         });
       }
