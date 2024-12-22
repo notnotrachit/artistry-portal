@@ -10,6 +10,7 @@ export class SelectionManager {
   private mouse = new THREE.Vector2();
   private tooltipElement: HTMLElement | null = null;
   private selectedObject: THREE.Object3D | null = null;
+  private boxHelper: THREE.BoxHelper | null = null;
 
   constructor(scene: THREE.Scene, camera: THREE.Camera) {
     this.scene = scene;
@@ -78,6 +79,11 @@ export class SelectionManager {
       if (object.userData.id) {
         this.selectedArtwork = object;
         this.resizeHandles.createHandles(object);
+
+        // Show box around selected artwork
+        if (this.boxHelper) this.scene.remove(this.boxHelper);
+        this.boxHelper = new THREE.BoxHelper(object, 0xffff00);
+        this.scene.add(this.boxHelper);
       } else if (!object.userData.isHandle) {
         this.clearSelection();
       }
@@ -89,6 +95,10 @@ export class SelectionManager {
   clearSelection() {
     this.selectedArtwork = null;
     this.resizeHandles.clearHandles();
+    if (this.boxHelper) {
+      this.scene.remove(this.boxHelper);
+      this.boxHelper = null;
+    }
   }
 
   getSelectedArtwork() {

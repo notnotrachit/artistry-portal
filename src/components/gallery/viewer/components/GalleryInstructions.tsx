@@ -11,6 +11,7 @@ export const GalleryInstructions = () => {
           <li>Click and drag to move artwork</li>
           <li>Hold Shift + drag to rotate</li>
           <li>Hold Alt + drag to move in/out</li>
+          <li>Hold Ctrl + drag up/down for uniform scaling</li>
           <li>Drag yellow corner handles to resize (maintains aspect ratio)</li>
         </ul>
       </AlertDescription>
