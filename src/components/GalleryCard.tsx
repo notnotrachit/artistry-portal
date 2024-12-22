@@ -88,11 +88,11 @@ export const GalleryCard = ({
             </div>
           )}
           <div className="absolute top-4 right-4 flex gap-2">
-            <Badge variant="secondary" className="bg-zinc-900/80 text-zinc-100 border-zinc-700">
+            {/* <Badge variant="secondary" className="bg-zinc-900/80 text-zinc-100 border-zinc-700">
               {template}
-            </Badge>
+            </Badge> */}
             <Badge variant="secondary" className="bg-zinc-900/80 text-zinc-100 border-zinc-700">
-              {artworkCount} {artworkCount === 1 ? 'artwork' : 'artworks'}
+              {artworkCount} {artworkCount === 1 ? 'photo' : 'photos'}
             </Badge>
           </div>
         </div>

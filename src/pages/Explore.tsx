@@ -17,24 +17,53 @@ const Explore = () => {
   const session = useSession();
 
   const { data: galleries, isLoading } = useQuery({
-    queryKey: ["public-galleries"],
+    queryKey: ["galleries", session?.user?.id],
     queryFn: async () => {
+      if (!session?.user?.id) {
+        // If not logged in, only fetch public galleries
+        const { data, error } = await supabase
+          .from("galleries")
+          .select(`
+            *,
+            owner:profiles!galleries_owner_id_fkey(username, full_name)
+          `)
+          .eq("is_public", true)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        return data || [];
+      }
+
+      // If logged in, fetch both public galleries and user's private galleries
       const { data, error } = await supabase
         .from("galleries")
         .select(`
           *,
           owner:profiles!galleries_owner_id_fkey(username, full_name)
         `)
-        .eq("is_public", true)
-        .order("view_count", { ascending: false });
+        .or(`is_public.eq.true,owner_id.eq.${session.user.id}`)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data || [];
     },
   });
 
-  const filteredGalleries = galleries?.filter(
-    (gallery) =>
+  // Separate galleries into public and private
+  const publicGalleries = galleries?.filter(gallery => gallery.is_public);
+  const privateGalleries = galleries?.filter(gallery => 
+    !gallery.is_public && gallery.owner_id === session?.user?.id
+  );
+
+  // Filter based on search query
+  const filteredPublicGalleries = publicGalleries?.filter(
+    gallery =>
+      gallery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      gallery.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const filteredPrivateGalleries = privateGalleries?.filter(
+    gallery =>
       gallery.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       gallery.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -90,11 +119,25 @@ const Explore = () => {
           />
         </div>
 
-        <GalleryList
-          galleries={filteredGalleries || []}
-          onSelectGallery={(id) => navigate(`/gallery/${id}`)}
-          isLoading={isLoading}
-        />
+        {session?.user && filteredPrivateGalleries && filteredPrivateGalleries.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-2xl font-semibold text-white">Your Private Galleries</h2>
+            <GalleryList
+              galleries={filteredPrivateGalleries}
+              onSelectGallery={(id) => navigate(`/gallery/${id}`)}
+              isLoading={isLoading}
+            />
+          </div>
+        )}
+
+        <div className="space-y-4">
+          <h2 className="text-2xl font-semibold text-white">Public Galleries</h2>
+          <GalleryList
+            galleries={filteredPublicGalleries || []}
+            onSelectGallery={(id) => navigate(`/gallery/${id}`)}
+            isLoading={isLoading}
+          />
+        </div>
         
         {showCreateDialog && (
           <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
