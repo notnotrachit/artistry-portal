@@ -15,10 +15,11 @@ interface GalleryViewer3DProps {
 }
 
 const GalleryViewer3D = ({ artworks, isOwner = false }: GalleryViewer3DProps) => {
+  console.log(isOwner);
   return (
     <div className="h-full relative">
       {isOwner && (
-        <div className="absolute top-16 left-0 w-full">
+        <div className="mt-16 left-0 w-full">
           <GalleryInstructions />
         </div>
       )}
